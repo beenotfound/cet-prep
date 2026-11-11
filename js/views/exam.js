@@ -1,7 +1,7 @@
 /* views/exam.js — question bank: practice sets and full mock papers. */
 
 import { h } from '../core/dom.js';
-import { button, card, tag, progress, toast, showSheet } from '../ui/components.js';
+import { button, card, tag, progress, toast, showSheet, statePanel } from '../ui/components.js';
 import { renderItem, feedbackView } from './exam-items.js';
 import { gradeItem } from '../domain/exam.js';
 import { gradeTranslation, gradeWriting, reportAIError } from '../features/ai.js';
@@ -25,8 +25,26 @@ const PRACTICE = [
   { type: 'writing', label: '写作', desc: '范文 + AI 批改', tone: 'yellow' },
 ];
 
-export async function render(ctx) {
-  await ctx.ensureExamData();
+/** Shows a loading state immediately, then builds the real view once the exam bundle arrives. */
+export function render(ctx) {
+  const root = h('div', { class: 'v-exam stack stack--lg' });
+  if (ctx.data.examReady) {
+    root.appendChild(build(ctx));
+    return root;
+  }
+  root.appendChild(statePanel('loading', { message: '正在加载题库（约 350 KB，仅第一次需要）…' }));
+  ctx.ensureExamData()
+    .then(() => root.replaceChildren(build(ctx)))
+    .catch((error) => {
+      root.replaceChildren(statePanel('error', {
+        message: error.message,
+        action: button({ label: '重试', variant: 'primary', onClick: () => ctx.refresh() }),
+      }));
+    });
+  return root;
+}
+
+function build(ctx) {
   const root = h('div', { class: 'v-exam stack stack--lg' });
   let mode = 'home';
   let queue = [];
