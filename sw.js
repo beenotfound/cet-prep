@@ -1,5 +1,5 @@
 /* sw.js — offline shell for 四六级剪贴本. Bump VERSION on every deploy. */
-const VERSION = 'cet-collage-8fce116d76';
+const VERSION = 'cet-collage-bc590b0332';
 const CACHE = VERSION;
 
 const SHELL = [

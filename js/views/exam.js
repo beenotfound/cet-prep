@@ -12,6 +12,8 @@ const TYPE_LABEL = {
 };
 
 const VOCAB_SET = new Set(['w2m', 'm2w', 'fill', 'spell']);
+/** choice questions grade the moment you tap an option — no separate submit step */
+const INSTANT = new Set(['w2m', 'm2w', 'fill']);
 export const vocabPool = (ctx) => [...ctx.data.questionsVocab.items, ...(ctx.state.custom || []).filter((i) => VOCAB_SET.has(i.type))];
 export const contentPool = (ctx) => [...ctx.data.content, ...(ctx.state.custom || []).filter((i) => !VOCAB_SET.has(i.type))];
 
@@ -186,8 +188,9 @@ function build(ctx, root) {
     const entry = queue[idx];
     if (!entry) return null;
     const item = entry.item;
+    const instant = INSTANT.has(item.type);
     if (!answered && runnerIdx !== idx) {
-      runner = renderItem(ctx, item);
+      runner = renderItem(ctx, item, { onPick: instant ? pickInstant : undefined });
       runnerIdx = idx;
     }
 
@@ -199,19 +202,43 @@ function build(ctx, root) {
         clockEl,
       ),
       progress(idx / queue.length),
-      card({ tape: true, children: answered ? feedbackView(item, entry.result) : runner.el }),
+      card({ tape: true, children: answered && !instant ? feedbackView(item, entry.result) : runner.el }),
       answered
         ? h('div', { class: 'stack' },
             (item.type === 'translation' || item.type === 'writing') ? aiGradeButton(item, entry.response) : null,
             button({ label: idx + 1 >= queue.length ? '查看结果' : '下一题', variant: 'primary', block: true, onClick: next }),
           )
-        : h('div', { class: 'stack' },
-            button({ label: '提交答案', variant: 'primary', size: 'lg', block: true, onClick: submit }),
-            (item.type === 'translation' || item.type === 'writing')
-              ? h('div', { class: 'xs faint center' }, '主观题不自动判分，提交后可看范文')
-              : null,
-          ),
+        : instant
+          ? h('div', { class: 'xs faint center' }, '点选项即判分')
+          : h('div', { class: 'stack' },
+              button({ label: '提交答案', variant: 'primary', size: 'lg', block: true, onClick: submit }),
+              (item.type === 'translation' || item.type === 'writing')
+                ? h('div', { class: 'xs faint center' }, '主观题不自动判分，提交后可看范文')
+                : null,
+            ),
     );
+  }
+
+  function record(item, result) {
+    session.correct += result.correct;
+    session.total += result.total;
+    if (result.needsReview) session.pending++;
+    const bucket = session.byType[item.type] || (session.byType[item.type] = { correct: 0, total: 0 });
+    bucket.correct += result.correct;
+    bucket.total += result.total;
+  }
+
+  function pickInstant(choice) {
+    if (answered) return;
+    const entry = queue[idx];
+    const item = entry.item;
+    const result = gradeItem(item, choice);
+    entry.result = result;
+    entry.response = choice;
+    record(item, result);
+    runner.reveal?.(result);
+    answered = true;
+    paint();
   }
 
   function submit() {
@@ -233,12 +260,7 @@ function build(ctx, root) {
     const result = gradeItem(item, response);
     entry.result = result;
     entry.response = response;
-    session.correct += result.correct;
-    session.total += result.total;
-    if (result.needsReview) session.pending++;
-    const bucket = session.byType[item.type] || (session.byType[item.type] = { correct: 0, total: 0 });
-    bucket.correct += result.correct;
-    bucket.total += result.total;
+    record(item, result);
     answered = true;
     paint();
   }
@@ -280,6 +302,8 @@ function build(ctx, root) {
   function result() {
     const objective = session.total > 0;
     const pct = objective ? Math.round((session.correct / session.total) * 100) : 0;
+    // only meaningful section splits (a paper), never internal vocab codes
+    const breakdown = Object.entries(session.byType).filter(([type]) => TYPE_LABEL[type]);
     return h('div', { class: 'stack stack--lg' },
       card({
         tape: true,
@@ -295,12 +319,14 @@ function build(ctx, root) {
               : `${session.pending} 道主观题，请对照范文自评或让 AI 批改`),
         ),
       }),
-      h('div', { class: 'stack' },
-        Object.entries(session.byType).map(([type, v]) => h('div', { class: 'c-kv' },
-          h('span', { class: 'muted' }, TYPE_LABEL[type] || type),
-          h('span', { class: 'bold' }, v.total ? `${v.correct} / ${v.total}` : `${v.correct} 题`),
-        )),
-      ),
+      breakdown.length > 1
+        ? h('div', { class: 'stack' },
+            breakdown.map(([type, v]) => h('div', { class: 'c-kv' },
+              h('span', { class: 'muted' }, TYPE_LABEL[type]),
+              h('span', { class: 'bold' }, v.total ? `${v.correct} / ${v.total}` : `${v.correct} 题`),
+            )),
+          )
+        : null,
       button({ label: '再来一组', variant: 'primary', block: true, onClick: () => { mode = 'home'; paint(); } }),
       button({ label: '回首页', block: true, onClick: () => ctx.go('#/today') }),
     );

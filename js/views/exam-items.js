@@ -8,25 +8,37 @@ function paragraphs(text) {
   return String(text || '').split(/\n{2,}/).filter(Boolean).map((p) => h('p', { class: 'v-exam__para' }, p));
 }
 
-function optionList(options, selected, onPick) {
+function optionList(options, selected, onPick, review) {
   const wrap = h('div', { class: 'v-exam__options' });
   let current = selected;
 
   function paint() {
     wrap.replaceChildren(
-      ...options.map((text, i) => h('button', {
-        type: 'button',
-        class: ['v-exam__option', current === i && 'is-picked'].filter(Boolean).join(' '),
-        'aria-pressed': current === i ? 'true' : 'false',
-        onclick: () => {
-          current = i;
-          paint();
-          onPick(i);
+      ...options.map((text, i) => {
+        const isCorrect = Boolean(review) && i === review.correct;
+        const isWrong = Boolean(review) && i === review.choice && i !== review.correct;
+        return h('button', {
+          type: 'button',
+          class: [
+            'v-exam__option',
+            !review && current === i && 'is-picked',
+            isCorrect && 'is-correct',
+            isWrong && 'is-wrong',
+            review && 'is-locked',
+          ].filter(Boolean).join(' '),
+          'aria-pressed': !review && current === i ? 'true' : 'false',
+          onclick: () => {
+            if (review) return;
+            current = i;
+            paint();
+            onPick(i);
+          },
         },
-      },
-        h('span', { class: 'v-exam__badge' }, String.fromCharCode(65 + i)),
-        h('span', { class: 'grow' }, text),
-      )),
+          h('span', { class: 'v-exam__badge' }, String.fromCharCode(65 + i)),
+          h('span', { class: 'grow' }, text),
+          review ? h('span', { class: 'v-exam__mark' }, isCorrect ? '✓' : isWrong ? '✗' : '') : null,
+        );
+      }),
     );
   }
 
@@ -41,12 +53,15 @@ function selectRow(labels, value, onChange, placeholder = '选择') {
   return sel;
 }
 
-/** Creates a renderer for one item. Returns { el, getResponse }. */
-export function renderItem(ctx, item) {
+/** Creates a renderer for one item. Returns { el, getResponse, reveal? }. */
+export function renderItem(ctx, item, { onPick } = {}) {
   const store = { choice: null, answers: [], text: '' };
 
   if (item.type === 'w2m' || item.type === 'm2w' || item.type === 'fill') {
     const el = h('div', { class: 'stack' });
+    let choice = null;
+    let review = null;
+
     const paint = () => {
       el.replaceChildren(
         h('div', { class: 'v-exam__prompt' },
@@ -57,11 +72,25 @@ export function renderItem(ctx, item) {
             ? h('button', { type: 'button', class: 'c-btn c-btn--ghost c-btn--sm', onclick: () => speak(item.prompt) }, '🔊')
             : null,
         ),
-        optionList(item.options, store.choice, (i) => { store.choice = i; paint(); }),
+        optionList(item.options, choice, (i) => {
+          if (review) return;
+          choice = i;
+          paint();
+          onPick?.(i);
+        }, review),
+        review ? h('div', { class: 'v-exam__explain small' }, item.explain || '') : null,
       );
     };
     paint();
-    return { el, getResponse: () => store.choice };
+
+    return {
+      el,
+      getResponse: () => choice,
+      reveal(result) {
+        review = { correct: item.answer, choice };
+        paint();
+      },
+    };
   }
 
   if (item.type === 'spell') {

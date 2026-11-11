@@ -156,6 +156,21 @@
   box-shadow: var(--shadow-sm);
   transform: translate(-1px, -1px);
 }
+.v-exam__option.is-correct {
+  background: var(--mint);
+  box-shadow: var(--shadow-sm);
+  transform: translate(-1px, -1px);
+}
+.v-exam__option.is-wrong {
+  background: var(--red-soft);
+}
+.v-exam__option.is-locked { cursor: default; }
+.v-exam__mark {
+  flex: 0 0 auto;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+}
 .v-exam__badge {
   display: inline-grid;
   place-items: center;
@@ -222,7 +237,7 @@
 
 @media (hover: hover) {
   .v-words__row:hover { background: var(--paper-3); }
-  .v-exam__option:hover { background: var(--paper-3); }
+  .v-exam__option:not(.is-locked):hover { background: var(--paper-3); }
   .v-exam__option.is-picked:hover { background: var(--yellow); }
 }
 
