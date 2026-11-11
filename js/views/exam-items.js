@@ -63,7 +63,7 @@ export function renderItem(ctx, item, { onPick } = {}) {
     let review = null;
 
     const paint = () => {
-      el.replaceChildren(
+      const parts = [
         h('div', { class: 'v-exam__prompt' },
           item.type === 'w2m'
             ? h('div', { class: 'v-exam__word display' }, item.prompt)
@@ -78,8 +78,9 @@ export function renderItem(ctx, item, { onPick } = {}) {
           paint();
           onPick?.(i);
         }, review),
-        review ? h('div', { class: 'v-exam__explain small' }, item.explain || '') : null,
-      );
+      ];
+      if (review) parts.push(h('div', { class: 'v-exam__explain small' }, item.explain || ''));
+      el.replaceChildren(...parts);
     };
     paint();
 

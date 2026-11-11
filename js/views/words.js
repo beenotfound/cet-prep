@@ -79,16 +79,15 @@ export function render(ctx) {
     countEl.textContent = `${rows.length} 个词`;
     if (reset) listEl.replaceChildren();
     const slice = rows.slice(0, limit);
-    listEl.replaceChildren(
-      ...slice.map(row),
-      rows.length > limit
-        ? h('div', { style: { 'margin-top': '10px' } }, button({
-            label: `再显示 ${Math.min(PAGE, rows.length - limit)} 个`,
-            block: true,
-            onClick: () => { limit += PAGE; paintList(false); },
-          }))
-        : null,
-    );
+    const parts = slice.map(row);
+    if (rows.length > limit) {
+      parts.push(h('div', { style: { 'margin-top': '10px' } }, button({
+        label: `再显示 ${Math.min(PAGE, rows.length - limit)} 个`,
+        block: true,
+        onClick: () => { limit += PAGE; paintList(false); },
+      })));
+    }
+    listEl.replaceChildren(...parts);
   }
 
   /* ---------------- sieve mode ---------------- */
