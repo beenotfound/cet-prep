@@ -146,44 +146,26 @@ function build(ctx, root) {
   /* ---------------- home ---------------- */
 
   function home() {
-    const level = ctx.state.profile.level;
-    const levelOk = (item) => (level === 'both' ? true : level === 'cet4' ? item.level === 'cet4' : item.level !== 'cet4');
-    const countOf = (type) => contentPool(ctx).filter((i) => i.type === type && levelOk(i)).length;
-    const vocabCount = vocabPool(ctx).filter(levelOk).length;
-    const readWriteCount = contentPool(ctx).filter(levelOk).length;
-    const papers = ctx.data.papers.items.filter(levelOk);
+    const levelOk = (item) => {
+      const level = ctx.state.profile.level;
+      return level === 'both' ? true : level === 'cet4' ? item.level === 'cet4' : item.level !== 'cet4';
+    };
+    const subEl = h('div', { class: 'page-sub' });
+    const chipHost = h('div');
+    const paperHost = h('div', { class: 'stack' });
+    const countEls = new Map();
 
-    return h('div', { class: 'stack stack--lg' },
-      h('header', { class: 'page-head' },
-        h('div', null,
-          h('h1', { class: 'page-title' }, '题库'),
-          h('div', { class: 'page-sub' }, `词汇题 ${vocabCount} 道 · 读写题 ${readWriteCount} 篇`),
-        ),
-      ),
-
-      chips(
-        [{ id: 'cet4', label: '四级' }, { id: 'cet6', label: '六级' }, { id: 'both', label: '混合' }],
-        level,
-        (id) => { ctx.actions.setProfile({ level: id }); paint(); },
-      ),
-
-      h('h2', { class: 'bold', style: { 'font-size': '18px' } }, '专项练习'),
-      h('div', { class: 'v-exam__grid' },
-        PRACTICE.map((p) => card({
-          variant: p.tone,
-          className: 'v-exam__tile',
-          children: h('div', { class: 'stack' },
-            h('div', { class: 'bold', style: { 'font-size': '17px' } }, p.label),
-            h('div', { class: 'xs muted' }, p.desc),
-            h('div', { class: 'xs bold' }, p.type === 'vocab' ? '20 题/组' : `${countOf(p.type)} 篇`),
-            button({ label: '开始', size: 'sm', onClick: () => startPractice(p.type) }),
-          ),
-        })),
-      ),
-
-      h('div', { class: 'c-divider', style: { 'margin': '6px 0' } }),
-      h('h2', { class: 'bold', style: { 'font-size': '18px' } }, '模拟整卷'),
-      papers.length
+    function refresh() {
+      const vocabCount = vocabPool(ctx).filter(levelOk).length;
+      const readWriteCount = contentPool(ctx).filter(levelOk).length;
+      subEl.textContent = `词汇题 ${vocabCount} 道 · 读写题 ${readWriteCount} 篇`;
+      for (const [type, el] of countEls) {
+        el.textContent = type === 'vocab'
+          ? '20 题/组'
+          : `${contentPool(ctx).filter((i) => i.type === type && levelOk(i)).length} 篇`;
+      }
+      const papers = ctx.data.papers.items.filter(levelOk);
+      paperHost.replaceChildren(...(papers.length
         ? papers.map((paper) => card({
             children: h('div', { class: 'row row--between' },
               h('div', { class: 'grow' },
@@ -193,7 +175,49 @@ function build(ctx, root) {
               button({ label: '开始', size: 'sm', variant: 'primary', onClick: () => startPaper(paper) }),
             ),
           }))
-        : h('div', { class: 'c-panel small' }, '这个级别还没有整卷'),
+        : [h('div', { class: 'c-panel small' }, '这个级别还没有整卷')]));
+    }
+
+    function refreshChips() {
+      chipHost.replaceChildren(chips(
+        [{ id: 'cet4', label: '四级' }, { id: 'cet6', label: '六级' }, { id: 'both', label: '混合' }],
+        ctx.state.profile.level,
+        (id) => {
+          ctx.actions.setProfile({ level: id });
+          refreshChips();
+          refresh();
+        },
+      ));
+    }
+
+    refreshChips();
+    refresh();
+
+    return h('div', { class: 'stack stack--lg' },
+      h('header', { class: 'page-head' },
+        h('div', null, h('h1', { class: 'page-title' }, '题库'), subEl),
+      ),
+      chipHost,
+      h('h2', { class: 'bold', style: { 'font-size': '18px' } }, '专项练习'),
+      h('div', { class: 'v-exam__grid' },
+        PRACTICE.map((p) => {
+          const countEl = h('div', { class: 'xs bold' });
+          countEls.set(p.type, countEl);
+          return card({
+            variant: p.tone,
+            className: 'v-exam__tile',
+            children: h('div', { class: 'stack' },
+              h('div', { class: 'bold', style: { 'font-size': '17px' } }, p.label),
+              h('div', { class: 'xs muted' }, p.desc),
+              countEl,
+              button({ label: '开始', size: 'sm', onClick: () => startPractice(p.type) }),
+            ),
+          });
+        }),
+      ),
+      h('div', { class: 'c-divider', style: { 'margin': '6px 0' } }),
+      h('h2', { class: 'bold', style: { 'font-size': '18px' } }, '模拟整卷'),
+      paperHost,
     );
   }
 
