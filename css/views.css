@@ -243,6 +243,14 @@
 
 /* ---------------- me ---------------- */
 .v-me .c-input { font-size: 15px; }
+.v-me__preview {
+  width: 100%;
+  max-width: 300px;
+  border: var(--edge);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  transform: rotate(-1deg);
+}
 
 @media (min-width: 600px) {
   .v-exam__grid { grid-template-columns: repeat(3, 1fr); }

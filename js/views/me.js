@@ -6,6 +6,8 @@ import * as ai from '../features/ai.js';
 import * as openai from '../features/providers/openai.js';
 import * as claude from '../features/providers/claude.js';
 import { estimateKnown } from '../domain/engine.js';
+import { coverageOf } from '../domain/coverage.js';
+import { buildCard, shareCard, saveCard, shareApp } from '../features/share.js';
 import { parseImport } from '../domain/importer.js';
 import { daysUntil } from '../core/format.js';
 
@@ -20,7 +22,64 @@ export function render(ctx) {
   const root = h('div', { class: 'v-me stack stack--lg' });
 
   function paint() {
-    root.replaceChildren(headerLite(), profileCard(), statsCard(), aiCard(), importCard(), backupCard(), aboutCard());
+    root.replaceChildren(headerLite(), profileCard(), statsCard(), shareCardView(), aiCard(), importCard(), backupCard(), aboutCard());
+  }
+
+  function shareStats() {
+    const known = estimateKnown(ctx.data.words, state.theta, state.profile.level);
+    const corpus = ctx.data.readingStats?.corpus;
+    return {
+      known: known.known,
+      total: known.total,
+      coverage: corpus ? coverageOf(corpus, ctx.data.byWord, state.theta, state).ratio : 0,
+      streak: state.stats.streak || 0,
+      days: Object.keys(state.stats.days || {}).length,
+      reviewing: Object.values(state.words).filter((w) => (w.reps || 0) > 0).length,
+      examIn: daysUntil(state.profile.examDate),
+      level: state.profile.level,
+      theta: state.theta,
+    };
+  }
+
+  function shareCardView() {
+    const stats = shareStats();
+    let preview;
+    try {
+      preview = h('img', { class: 'v-me__preview', alt: '学习画像', src: buildCard(stats).toDataURL('image/png') });
+    } catch (error) {
+      preview = h('div', { class: 'c-panel small' }, '卡片生成失败');
+    }
+    return card({
+      children: h('div', { class: 'stack' },
+        h('div', { class: 'bold' }, '分享'),
+        h('p', { class: 'xs muted' }, '生成一张学习画像，发给朋友。'),
+        h('div', { class: 'center' }, preview),
+        h('div', { class: 'row row--wrap' },
+          button({
+            label: '分享卡片', variant: 'primary', size: 'sm',
+            onClick: async () => {
+              try {
+                const result = await shareCard(stats);
+                if (result === 'downloaded') toast('图片已保存，可手动分享', 'ok');
+              } catch (error) {
+                if (error?.name !== 'AbortError') toast('分享失败', 'error');
+              }
+            },
+          }),
+          button({
+            label: '保存图片', size: 'sm',
+            onClick: async () => { await saveCard(stats); toast('已保存', 'ok'); },
+          }),
+        ),
+        button({
+          label: '分享这个工具', variant: 'ghost', block: true, size: 'sm',
+          onClick: async () => {
+            const result = await shareApp();
+            if (result === 'copied') toast('链接已复制', 'ok');
+          },
+        }),
+      ),
+    });
   }
 
   function headerLite() {
