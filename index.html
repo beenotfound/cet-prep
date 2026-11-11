@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>四六级剪贴本</title>
+  <meta name="description" content="先测后学：只学你还没掌握的四六级词汇，配原创题库与可选的 AI 辅导。">
+  <meta name="theme-color" content="#FFF8E7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="四六级剪贴本">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
+  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./css/tokens.css">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/components.css">
+  <link rel="stylesheet" href="./css/views.css">
+</head>
+<body>
+  <div id="app">
+    <div class="c-panel" style="margin:24px auto;max-width:420px">正在加载词库…</div>
+    <noscript><div class="c-panel">需要开启 JavaScript 才能使用。</div></noscript>
+  </div>
+
+  <nav class="c-nav" id="nav" aria-label="主导航">
+    <button type="button" class="c-nav__item" data-tab="today">
+      <span class="c-nav__icon" aria-hidden="true">📚</span><span>今日</span>
+    </button>
+    <button type="button" class="c-nav__item" data-tab="words">
+      <span class="c-nav__icon" aria-hidden="true">🔤</span><span>单词</span>
+    </button>
+    <button type="button" class="c-nav__item" data-tab="exam">
+      <span class="c-nav__icon" aria-hidden="true">📝</span><span>题库</span>
+    </button>
+    <button type="button" class="c-nav__item" data-tab="me">
+      <span class="c-nav__icon" aria-hidden="true">🙋</span><span>我的</span>
+    </button>
+  </nav>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

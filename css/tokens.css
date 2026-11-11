@@ -1,0 +1,58 @@
+/* css/tokens.css — variables only. */
+:root {
+  /* paper + ink */
+  --paper: #fff8e7;
+  --paper-2: #fffdf6;
+  --paper-3: #ffeec9;
+  --ink: #1e1e1e;
+  --ink-soft: #55504a;
+  --ink-faint: #8b8479;
+  --dot: rgba(30, 30, 30, 0.10);
+
+  /* bright collage accents */
+  --red: #ff4d4d;
+  --red-deep: #e03131;
+  --yellow: #ffc93c;
+  --yellow-deep: #f0a800;
+  --blue: #2e9bff;
+  --blue-deep: #1c7ed6;
+  --mint: #2ecc71;
+  --mint-deep: #1fa85c;
+  --violet: #8b5cf6;
+  --pink: #ff8fb1;
+  --tape: rgba(255, 214, 120, 0.78);
+
+  /* shape language */
+  --edge: 3px solid var(--ink);
+  --edge-thin: 2px solid var(--ink);
+  --shadow: 6px 6px 0 var(--ink);
+  --shadow-sm: 4px 4px 0 var(--ink);
+  --shadow-lift: 8px 8px 0 var(--ink);
+  --r-lg: 22px;
+  --r-md: 16px;
+  --r-sm: 10px;
+  --r-pill: 999px;
+
+  /* type */
+  --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Segoe UI", sans-serif;
+  --font-display: Georgia, "Songti SC", "STSong", "Times New Roman", serif;
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-md: 16px;
+  --fs-lg: 20px;
+  --fs-xl: 26px;
+  --fs-2xl: 34px;
+
+  /* spacing */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 22px;
+  --s6: 30px;
+  --s7: 44px;
+
+  --maxw: 1040px;
+  --tap: 44px;
+}

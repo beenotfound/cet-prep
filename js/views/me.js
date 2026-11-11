@@ -1,0 +1,218 @@
+/* views/me.js — settings, AI configuration, backup, about. */
+
+import { h } from '../core/dom.js';
+import { button, card, chips, tag, kv, toast, confirmSheet } from '../ui/components.js';
+import * as ai from '../features/ai.js';
+import * as openai from '../features/providers/openai.js';
+import * as claude from '../features/providers/claude.js';
+import { estimateKnown } from '../domain/engine.js';
+import { daysUntil } from '../core/format.js';
+
+const LEVELS = [
+  { id: 'cet4', label: '四级' },
+  { id: 'cet6', label: '六级' },
+  { id: 'both', label: '四六级都要' },
+];
+
+export function render(ctx) {
+  const state = ctx.state;
+  const root = h('div', { class: 'v-me stack stack--lg' });
+
+  function paint() {
+    root.replaceChildren(headerLite(), profileCard(), statsCard(), aiCard(), backupCard(), aboutCard());
+  }
+
+  function headerLite() {
+    return h('header', { class: 'page-head' },
+      h('div', null,
+        h('h1', { class: 'page-title' }, '我的'),
+        h('div', { class: 'page-sub' }, '设置、AI 与备份'),
+      ),
+    );
+  }
+
+  function profileCard() {
+    const days = daysUntil(state.profile.examDate);
+    return card({
+      children: h('div', { class: 'stack' },
+        h('div', { class: 'bold' }, '学习档案'),
+        h('div', { class: 'c-label' }, '目标'),
+        chips(LEVELS, state.profile.level, (id) => { ctx.actions.setProfile({ level: id }); paint(); }),
+        h('div', { class: 'c-label', style: { 'margin-top': '10px' } }, '考试日期'),
+        h('input', {
+          class: 'c-input', type: 'date', value: state.profile.examDate,
+          onchange: (e) => { ctx.actions.setProfile({ examDate: e.target.value }); paint(); },
+        }),
+        days != null ? h('div', { class: 'xs muted', style: { 'margin-top': '4px' } }, `还有 ${days} 天`) : null,
+        h('div', { class: 'c-label', style: { 'margin-top': '10px' } }, '每天新词'),
+        h('div', { class: 'c-pill-row' }, [10, 20, 30, 50].map((n) => h('button', {
+          type: 'button',
+          class: ['c-chip', state.profile.dailyNew === n && 'is-active'].filter(Boolean).join(' '),
+          onclick: () => { ctx.actions.setProfile({ dailyNew: n }); paint(); },
+        }, `${n}`))),
+        h('div', { class: 'row', style: { 'margin-top': '12px' } },
+          button({ label: '重新校准', size: 'sm', onClick: () => ctx.go('#/onboarding') }),
+          button({ label: '词库', size: 'sm', onClick: () => ctx.go('#/words') }),
+        ),
+      ),
+    });
+  }
+
+  function statsCard() {
+    const known = estimateKnown(ctx.data.words, state.theta, state.profile.level);
+    const mastered = Object.values(state.words).filter((w) => w.k).length;
+    const touched = Object.values(state.words).filter((w) => (w.seen || 0) > 0).length;
+    const dayCount = Object.keys(state.stats.days || {}).length;
+    return card({
+      variant: 'yellow',
+      children: h('div', { class: 'stack' },
+        h('div', { class: 'bold' }, '学习统计'),
+        kv('预计已掌握', `${known.known} / ${known.total}`),
+        kv('手动标记已会', String(mastered)),
+        kv('接触过的词', String(touched)),
+        kv('学习天数', String(dayCount)),
+        kv('连续天数', String(state.stats.streak || 0)),
+        kv('能力值 θ', state.theta.toFixed(2)),
+        state.calib.at ? h('div', { class: 'xs faint' }, `上次校准：${new Date(state.calib.at).toLocaleString('zh-CN')}`) : null,
+      ),
+    });
+  }
+
+  function aiCard() {
+    const a = state.ai;
+    const presets = Object.entries(ai.PRESETS).map(([id, p]) => ({ id, label: p.label }));
+    return card({
+      children: h('div', { class: 'stack' },
+        h('div', { class: 'row row--between' },
+          h('div', { class: 'bold' }, 'AI 设置'),
+          h('span', { class: 'xs muted' }, ai.isConfigured(a) ? '已配置' : '未配置'),
+        ),
+        h('p', { class: 'xs muted' },
+          'Key 只保存在本机浏览器，不会上传到任何服务器。每次调用前都会弹确认，不点不消耗。'),
+        chips(presets, a.provider, (id) => {
+          const preset = ai.PRESETS[id];
+          ctx.actions.setAI({
+            provider: id,
+            baseUrl: preset.baseUrl || a.baseUrl,
+            model: preset.model || a.model,
+          });
+          paint();
+        }),
+        h('div', { class: 'c-field' },
+          h('label', { class: 'c-label' }, '接口地址'),
+          h('input', { class: 'c-input', value: a.baseUrl, placeholder: 'https://api.deepseek.com/v1', onchange: (e) => ctx.actions.setAI({ baseUrl: e.target.value.trim() }) }),
+        ),
+        h('div', { class: 'c-field' },
+          h('label', { class: 'c-label' }, 'API Key'),
+          h('input', { class: 'c-input', type: 'password', value: a.apiKey, autocomplete: 'off', placeholder: 'sk-…', onchange: (e) => ctx.actions.setAI({ apiKey: e.target.value.trim() }) }),
+        ),
+        h('div', { class: 'c-field' },
+          h('label', { class: 'c-label' }, '模型名'),
+          h('input', { class: 'c-input', value: a.model, placeholder: 'deepseek-chat', onchange: (e) => ctx.actions.setAI({ model: e.target.value.trim() }) }),
+        ),
+        h('div', { class: 'c-field' },
+          h('label', { class: 'c-label' }, '本次会话预算（tokens，0 = 不限）'),
+          h('input', {
+            class: 'c-input', type: 'number', min: 0, value: a.budget,
+            onchange: (e) => { ctx.actions.setAI({ budget: Number(e.target.value) || 0 }); paint(); },
+          }),
+        ),
+        h('div', { class: 'c-kv' }, h('span', { class: 'muted' }, '本次会话已用'), h('span', { class: 'bold' }, `${a.sessionTokens || 0} tokens`)),
+        h('div', { class: 'row', style: { 'margin-top': '8px' } },
+          button({ label: '测试连接', size: 'sm', onClick: testAI }),
+          button({ label: '清零用量', size: 'sm', onClick: () => { ctx.actions.setAI({ sessionTokens: 0 }); paint(); } }),
+        ),
+      ),
+    });
+  }
+
+  async function testAI() {
+    const a = state.ai;
+    if (!ai.isConfigured(a)) { toast('先把地址、Key、模型填完'); return; }
+    const ok = await confirmSheet('测试连接', '会发送一条很短（约 8 token）的测试请求。', { okLabel: '发送测试' });
+    if (!ok) return;
+    try {
+      const provider = ai.presetOf(a.provider).kind === 'claude' ? claude : openai;
+      await provider.ping({ baseUrl: a.baseUrl, apiKey: a.apiKey, model: a.model });
+      toast('连接成功', 'ok');
+    } catch (error) {
+      ctx.toast(ai.friendlyAIError(error), 'error');
+    }
+  }
+
+  function backupCard() {
+    return card({
+      children: h('div', { class: 'stack' },
+        h('div', { class: 'bold' }, '数据备份'),
+        h('p', { class: 'xs muted' }, '学习记录只存在本机。换设备或清缓存前请先导出。'),
+        h('div', { class: 'row' },
+          button({ label: '导出 JSON', size: 'sm', onClick: exportData }),
+          button({ label: '导入 JSON', size: 'sm', onClick: () => fileInput.click() }),
+        ),
+        h('div', { style: { 'margin-top': '10px' } },
+          button({ label: '清空全部数据', variant: 'red', size: 'sm', onClick: resetAll }),
+        ),
+      ),
+    });
+  }
+
+  const fileInput = h('input', {
+    type: 'file', accept: 'application/json,.json', style: { display: 'none' },
+    onchange: async (e) => {
+      const file = e.target.files?.[0];
+      e.target.value = '';
+      if (!file) return;
+      try {
+        const data = JSON.parse(await file.text());
+        if (!data || typeof data !== 'object' || !data.profile || !data.words) throw new Error('格式不对');
+        const ok = await confirmSheet('导入备份', '会覆盖当前学习记录，确定吗？', { okLabel: '覆盖导入', tone: 'red' });
+        if (!ok) return;
+        ctx.store.replace(data);
+        toast('已导入', 'ok');
+        ctx.go('#/today');
+      } catch (error) {
+        toast(`导入失败：${error.message}`, 'error');
+      }
+    },
+  });
+
+  function exportData() {
+    const payload = JSON.stringify(state, null, 2);
+    const blob = new Blob([payload], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = h('a', { href: url, download: `cet-collage-backup-${new Date().toISOString().slice(0, 10)}.json` });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('已导出', 'ok');
+  }
+
+  async function resetAll() {
+    const ok = await confirmSheet('清空全部数据', '学习记录、设置、AI Key 都会被删除，且不可恢复。', { okLabel: '确认清空', tone: 'red' });
+    if (!ok) return;
+    ctx.store.reset();
+    toast('已清空');
+    ctx.go('#/onboarding');
+  }
+
+  function aboutCard() {
+    return card({
+      variant: 'blue',
+      children: h('div', { class: 'stack' },
+        h('div', { class: 'bold' }, '关于'),
+        h('div', { class: 'xs muted' },
+          '词库数据来自 KyleBing/english-vocabulary（BSD-3-Clause），难度由 hermitdave/FrequencyWords（MIT）词频估算。',
+          h('br'),
+          '题目为原创或程序生成，不含受版权保护的真题原文。',
+          h('br'),
+          '听力模块未内置（原音频需配套真题文本，版权受限）。',
+        ),
+        h('div', { class: 'xs faint', style: { 'margin-top': '6px' } }, '四六级剪贴本 · v1'),
+      ),
+    });
+  }
+
+  paint();
+  return root;
+}

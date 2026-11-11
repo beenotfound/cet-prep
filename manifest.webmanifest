@@ -1,0 +1,25 @@
+{
+  "id": "./",
+  "name": "四六级剪贴本",
+  "short_name": "四六级",
+  "description": "先测后学：只学你还没掌握的四六级词汇，配原创题库与可选的 AI 辅导。",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#FFF8E7",
+  "theme_color": "#FFF8E7",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "今日学习", "url": "./index.html#/today" },
+    { "name": "单词库", "url": "./index.html#/words" },
+    { "name": "题库", "url": "./index.html#/exam" }
+  ]
+}

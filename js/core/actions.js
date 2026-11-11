@@ -1,0 +1,129 @@
+/* core/actions.js — the only place that mutates state slices. */
+
+import * as E from '../domain/engine.js';
+
+export function createActions({ store, data }) {
+  const state = () => store.get();
+  const byWord = data.byWord;
+
+  function commit() {
+    store.touch();
+    store.sync();
+  }
+
+  return {
+    setProfile(patch) {
+      Object.assign(state().profile, patch);
+      commit();
+    },
+
+    setUI(patch) {
+      Object.assign(state().ui, patch);
+      commit();
+    },
+
+    setTheta(theta) {
+      state().theta = E.clamp(theta, -2, 12);
+      commit();
+    },
+
+    finishCalibration(result) {
+      const s = state();
+      s.theta = E.clamp(result.theta, -2, 12);
+      s.calib = { at: Date.now(), se: result.se, items: result.items, spot: result.spot || null };
+      s.profile.onboarded = true;
+      commit();
+    },
+
+    /** Onboarding calibration tap: does not create an SRS schedule yet. */
+    calibrateAnswer(word, known) {
+      const s = state();
+      s.theta = E.recordAnswer({ state: s, theta: s.theta, k: 0.9 }, word, known);
+      E.bumpDay(s, 'total');
+      if (known) E.bumpDay(s, 'correct');
+      commit();
+    },
+
+    /** Study card self-assessment: grade 0..3. */
+    gradeWord(word, grade) {
+      const s = state();
+      const first = !s.words[word.w];
+      E.applyGrade(s, word, grade);
+      s.theta = E.recordAnswer({ state: s, theta: s.theta, k: 0.5 }, word, grade >= 2);
+      E.bumpDay(s, first ? 'new' : 'review');
+      E.bumpDay(s, 'total');
+      if (grade >= 2) E.bumpDay(s, 'correct');
+      if (grade === 0) {
+        s.wrong[word.w] = (s.wrong[word.w] || 0) + 1;
+      } else if (grade >= 2 && s.wrong[word.w]) {
+        delete s.wrong[word.w];
+      }
+      commit();
+    },
+
+    markKnown(word, manual = true) {
+      const s = state();
+      E.markKnown(s, word, manual);
+      delete s.wrong[word.w];
+      commit();
+    },
+
+    unmarkKnown(word) {
+      E.unmarkKnown(state(), word);
+      commit();
+    },
+
+    /** Sieve mode: "认识" retires the word, "不认识" pushes it into the queue. */
+    sieveAnswer(word, known) {
+      const s = state();
+      if (known) {
+        E.markKnown(s, word, true);
+      } else {
+        const w = s.words[word.w] || (s.words[word.w] = { seen: 0, wrong: 0, o: 0 });
+        w.o = E.clamp((w.o || 0) + 0.9, -3, 4);
+      }
+      commit();
+    },
+
+    toggleFav(word) {
+      const s = state();
+      const i = s.fav.indexOf(word.w);
+      if (i >= 0) s.fav.splice(i, 1);
+      else s.fav.push(word.w);
+      commit();
+    },
+
+    recordWrong(word) {      const s = state();
+      s.wrong[word.w] = (s.wrong[word.w] || 0) + 1;
+      commit();
+    },
+
+    clearWrong(word) {
+      delete state().wrong[word.w];
+      commit();
+    },
+
+    saveAttempt(paperId, attempt) {
+      state().papers[paperId] = attempt;
+      commit();
+    },
+
+    setAI(patch) {
+      Object.assign(state().ai, patch);
+      commit();
+    },
+
+    addTokens(n) {
+      state().ai.sessionTokens = (state().ai.sessionTokens || 0) + n;
+      commit();
+    },
+
+    resetAll() {
+      store.reset();
+    },
+
+    word(w) {
+      return byWord.get(w) || null;
+    },
+  };
+}

@@ -1,0 +1,206 @@
+/* css/views.css — per-view layout. One section per view. */
+
+/* ---------------- onboarding ---------------- */
+.v-onboard__head {
+  position: relative;
+  background: var(--paper-2);
+  border: var(--edge);
+  border-radius: 22px 26px 18px 24px / 24px 18px 26px 22px;
+  box-shadow: var(--shadow);
+  padding: var(--s5) var(--s4);
+  transform: rotate(-0.6deg);
+}
+.v-onboard__word { display: flex; justify-content: center; }
+.v-onboard__wordtext {
+  font-size: clamp(38px, 11vw, 62px);
+  line-height: 1.1;
+  letter-spacing: -1px;
+  word-break: break-word;
+  text-align: center;
+}
+
+/* ---------------- today ---------------- */
+.v-today__head { margin-bottom: var(--s2); }
+.v-today__hero {
+  position: relative;
+  background: var(--paper-2);
+  border: var(--edge);
+  border-radius: 22px 26px 18px 24px / 24px 18px 26px 22px;
+  box-shadow: var(--shadow);
+  padding: var(--s5) var(--s4);
+}
+.v-today__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s2);
+}
+.v-today__stat {
+  padding: var(--s3) var(--s2);
+  text-align: center;
+}
+.v-today__statnum {
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+/* ---------------- study ---------------- */
+.v-study__word {
+  font-size: clamp(36px, 10vw, 56px);
+  text-align: center;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  word-break: break-word;
+  padding: 6px 0 4px;
+}
+.v-study__meaning {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 17px;
+  line-height: 1.6;
+}
+.v-study__block { margin-top: var(--s3); }
+.v-study__example {
+  padding: var(--s2) 0;
+  border-top: 1px dashed rgba(30, 30, 30, 0.14);
+}
+.v-study__en { font-size: 15px; line-height: 1.55; }
+.v-study__grades {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s2);
+}
+.v-study__grades .c-btn { width: 100%; }
+
+/* ---------------- words ---------------- */
+.v-words__list {
+  display: flex;
+  flex-direction: column;
+  border: var(--edge-thin);
+  border-radius: var(--r-md);
+  background: var(--paper-2);
+  overflow: hidden;
+}
+.v-words__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  min-height: 62px;
+  padding: 10px var(--s3);
+  border: none;
+  border-bottom: 1px dashed rgba(30, 30, 30, 0.14);
+  background: transparent;
+  text-align: left;
+}
+.v-words__row:last-child { border-bottom: none; }
+.v-words__row:active { background: var(--paper-3); }
+.v-words__word { font-size: 18px; font-weight: 700; line-height: 1.2; }
+.v-words__chev { font-size: 22px; color: var(--ink-faint); }
+.v-words__sievecard { display: flex; justify-content: center; }
+
+/* ---------------- word detail ---------------- */
+.v-word .page-title { word-break: break-word; }
+
+/* ---------------- exam ---------------- */
+.v-exam__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s3);
+}
+.v-exam__tile { padding: var(--s3); transform: rotate(-0.4deg); }
+.v-exam__tile:nth-child(2n) { transform: rotate(0.5deg); }
+.v-exam__tile .c-btn { width: 100%; margin-top: 6px; }
+
+.v-exam__prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  min-height: 90px;
+}
+.v-exam__word {
+  font-size: clamp(30px, 9vw, 48px);
+  line-height: 1.15;
+  word-break: break-word;
+  text-align: center;
+}
+.v-exam__wordtext { font-size: 19px; font-weight: 700; text-align: center; line-height: 1.5; }
+
+.v-exam__options { display: flex; flex-direction: column; gap: var(--s2); }
+.v-exam__option {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  min-height: 52px;
+  padding: 10px var(--s3);
+  border: var(--edge-thin);
+  border-radius: var(--r-md);
+  background: #fff;
+  text-align: left;
+  font-size: 15px;
+}
+.v-exam__option.is-picked {
+  background: var(--yellow);
+  box-shadow: var(--shadow-sm);
+  transform: translate(-1px, -1px);
+}
+.v-exam__badge {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border: var(--edge-thin);
+  border-radius: 8px;
+  background: var(--paper);
+  font-size: 12px;
+  font-weight: 900;
+}
+.v-exam__passage {
+  font-size: 15px;
+  line-height: 1.75;
+}
+.v-exam__para { margin-bottom: 10px; }
+.v-exam__blank {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 24px;
+  padding: 0 5px;
+  margin: 0 2px;
+  border: var(--edge-thin);
+  border-radius: 6px;
+  background: var(--yellow);
+  font-size: 12px;
+  font-weight: 900;
+  vertical-align: middle;
+}
+.v-exam__blankrow {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 6px 0;
+}
+.v-exam__explain {
+  padding: 8px 0;
+  border-top: 1px dashed rgba(30, 30, 30, 0.14);
+}
+
+/* ---------------- me ---------------- */
+.v-me .c-input { font-size: 15px; }
+
+@media (min-width: 600px) {
+  .v-exam__grid { grid-template-columns: repeat(3, 1fr); }
+  .v-study__grades { grid-template-columns: repeat(4, 1fr); }
+  .v-today__statnum { font-size: 34px; }
+}
+
+@media (min-width: 900px) {
+  .v-onboard__head,
+  .v-today__hero { padding: var(--s6); }
+  .v-exam__grid { grid-template-columns: repeat(3, 1fr); }
+  .v-words__list { max-height: none; }
+}
