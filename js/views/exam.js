@@ -1,7 +1,7 @@
 /* views/exam.js — question bank: practice sets and full mock papers. */
 
 import { h } from '../core/dom.js';
-import { button, card, tag, progress, toast, showSheet, statePanel } from '../ui/components.js';
+import { button, card, tag, progress, toast, showSheet, statePanel, chips } from '../ui/components.js';
 import { renderItem, feedbackView } from './exam-items.js';
 import { gradeItem, formatClock } from '../domain/exam.js';
 import { gradeTranslation, gradeWriting, reportAIError } from '../features/ai.js';
@@ -146,14 +146,28 @@ function build(ctx, root) {
   /* ---------------- home ---------------- */
 
   function home() {
-    const count = (type) => contentPool(ctx).filter((i) => i.type === type).length;
+    const level = ctx.state.profile.level;
+    const levelOk = (item) => (level === 'both' ? true : level === 'cet4' ? item.level === 'cet4' : item.level !== 'cet4');
+    const countOf = (type) => contentPool(ctx).filter((i) => i.type === type && levelOk(i)).length;
+    const vocabCount = vocabPool(ctx).filter(levelOk).length;
+    const readWriteCount = contentPool(ctx).filter(levelOk).length;
+    const papers = ctx.data.papers.items.filter(levelOk);
+
     return h('div', { class: 'stack stack--lg' },
       h('header', { class: 'page-head' },
         h('div', null,
           h('h1', { class: 'page-title' }, '题库'),
-          h('div', { class: 'page-sub' }, `词汇题 ${vocabPool(ctx).length} 道 · 读写题 ${contentPool(ctx).length} 篇`),
+          h('div', { class: 'page-sub' }, `词汇题 ${vocabCount} 道 · 读写题 ${readWriteCount} 篇`),
         ),
       ),
+
+      chips(
+        [{ id: 'cet4', label: '四级' }, { id: 'cet6', label: '六级' }, { id: 'both', label: '混合' }],
+        level,
+        (id) => { ctx.actions.setProfile({ level: id }); paint(); },
+      ),
+
+      h('h2', { class: 'bold', style: { 'font-size': '18px' } }, '专项练习'),
       h('div', { class: 'v-exam__grid' },
         PRACTICE.map((p) => card({
           variant: p.tone,
@@ -161,15 +175,16 @@ function build(ctx, root) {
           children: h('div', { class: 'stack' },
             h('div', { class: 'bold', style: { 'font-size': '17px' } }, p.label),
             h('div', { class: 'xs muted' }, p.desc),
-            h('div', { class: 'xs bold' }, p.type === 'vocab' ? '20 题/组' : `${count(p.type)} 篇`),
+            h('div', { class: 'xs bold' }, p.type === 'vocab' ? '20 题/组' : `${countOf(p.type)} 篇`),
             button({ label: '开始', size: 'sm', onClick: () => startPractice(p.type) }),
           ),
         })),
       ),
+
       h('div', { class: 'c-divider', style: { 'margin': '6px 0' } }),
       h('h2', { class: 'bold', style: { 'font-size': '18px' } }, '模拟整卷'),
-      ctx.data.papers.items.length
-        ? ctx.data.papers.items.map((paper) => card({
+      papers.length
+        ? papers.map((paper) => card({
             children: h('div', { class: 'row row--between' },
               h('div', { class: 'grow' },
                 h('div', { class: 'bold' }, paper.title),
@@ -178,7 +193,7 @@ function build(ctx, root) {
               button({ label: '开始', size: 'sm', variant: 'primary', onClick: () => startPaper(paper) }),
             ),
           }))
-        : h('div', { class: 'c-panel small' }, '整卷还在生成中'),
+        : h('div', { class: 'c-panel small' }, '这个级别还没有整卷'),
     );
   }
 
