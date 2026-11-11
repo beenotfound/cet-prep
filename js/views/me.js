@@ -7,7 +7,7 @@ import * as openai from '../features/providers/openai.js';
 import * as claude from '../features/providers/claude.js';
 import { estimateKnown } from '../domain/engine.js';
 import { coverageOf } from '../domain/coverage.js';
-import { buildCard, dataUrlToBlob, isInAppBrowser, shareFile, saveBlob, shareApp } from '../features/share.js';
+import { buildCard, dataUrlToBlob, isInAppBrowser, prefersSystemShare, shareFile, saveBlob, shareApp } from '../features/share.js';
 import { parseImport } from '../domain/importer.js';
 import { daysUntil } from '../core/format.js';
 
@@ -59,6 +59,7 @@ export function render(ctx) {
       actions: [{ label: '知道了' }],
     });
 
+    const systemShare = prefersSystemShare();
     return card({
       children: h('div', { class: 'stack' },
         h('div', { class: 'bold' }, '分享'),
@@ -66,7 +67,7 @@ export function render(ctx) {
           ? h('div', { class: 'center' }, h('img', { class: 'v-me__preview', alt: '学习画像', src: dataUrl }))
           : h('div', { class: 'c-panel small' }, '卡片生成失败'),
         h('div', { class: 'row row--wrap' },
-          button({
+          systemShare ? button({
             label: '分享卡片', variant: 'primary', size: 'sm',
             onClick: () => {
               if (!file) return;
@@ -77,15 +78,22 @@ export function render(ctx) {
                 if (error?.name !== 'AbortError') toast('分享失败', 'error');
               });
             },
+          }) : button({
+            label: '下载卡片', variant: 'primary', size: 'sm',
+            onClick: () => {
+              if (!file) return;
+              saveBlob(file);
+              toast('图片已保存', 'ok');
+            },
           }),
-          button({
+          systemShare ? button({
             label: '保存图片', size: 'sm',
             onClick: () => {
               if (!file) return;
               saveBlob(file);
               toast('已保存', 'ok');
             },
-          }),
+          }) : null,
         ),
         button({
           label: '分享这个工具', variant: 'ghost', block: true, size: 'sm',

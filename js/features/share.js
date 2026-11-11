@@ -159,12 +159,21 @@ export function saveBlob(blob, name = '四六级剪贴本.png') {
   return 'saved';
 }
 
+/** The system share sheet is only worth using on touch devices; on Windows it is unreliable. */
+export function prefersSystemShare() {
+  try {
+    return typeof navigator.share === 'function' && window.matchMedia('(pointer: coarse)').matches;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Call this directly from a click handler: on iOS the share sheet must be opened
  * synchronously, before any await, or the user activation is gone.
  */
 export async function shareFile(file) {
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+  if (prefersSystemShare() && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: '四六级剪贴本', text: '我的学习画像' });
       return 'shared';
@@ -186,7 +195,7 @@ export async function shareApp() {
   if (isInAppBrowser()) return 'inapp';
   const url = shareUrl();
   const text = '先测后学，只学你还没掌握的四六级词汇';
-  if (navigator.share) {
+  if (prefersSystemShare()) {
     try {
       await navigator.share({ title: '四六级剪贴本', text, url });
       return 'shared';
