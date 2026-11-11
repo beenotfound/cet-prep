@@ -27,6 +27,7 @@ export function defaults() {
     wrong: {},
     fav: [],
     papers: {},
+    custom: [],
     ai: { provider: 'deepseek', baseUrl: '', key: '', model: '', sessionTokens: 0, budget: 0, remember: false },
     ui: { tab: 'today' },
   };

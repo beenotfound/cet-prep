@@ -12,6 +12,10 @@ const TYPE_LABEL = {
   matching: '长篇匹配', translation: '翻译', writing: '写作',
 };
 
+const VOCAB_SET = new Set(['w2m', 'm2w', 'fill', 'spell']);
+export const vocabPool = (ctx) => [...ctx.data.questionsVocab.items, ...(ctx.state.custom || []).filter((i) => VOCAB_SET.has(i.type))];
+export const contentPool = (ctx) => [...ctx.data.content, ...(ctx.state.custom || []).filter((i) => !VOCAB_SET.has(i.type))];
+
 const PRACTICE = [
   { type: 'vocab', label: '词汇速练', desc: '中英互选·例句填空·拼写', tone: 'yellow' },
   { type: 'reading', label: '仔细阅读', desc: '5 题/篇 · 带解析', tone: 'blue' },
@@ -40,7 +44,7 @@ export function render(ctx) {
     if (type === 'vocab') {
       items = pickVocab(ctx, 20);
     } else {
-      items = ctx.data.content.filter((i) => i.type === type && matchesLevel(i)).slice(0, type === 'translation' ? 3 : type === 'writing' ? 3 : 5);
+      items = contentPool(ctx).filter((i) => i.type === type && matchesLevel(i)).slice(0, type === 'translation' ? 3 : type === 'writing' ? 3 : 5);
     }
     if (!items.length) { ctx.toast('这个题型还没有内容'); return; }
     queue = items.map((item) => ({ item }));
@@ -82,7 +86,7 @@ export function render(ctx) {
   }
 
   function pickVocab(ctx, n) {
-    const pool = ctx.data.questionsVocab.items.filter((i) => {
+    const pool = vocabPool(ctx).filter((i) => {
       const lv = ctx.state.profile.level;
       if (lv === 'both') return true;
       if (lv === 'cet4') return i.level === 'cet4';
@@ -102,12 +106,12 @@ export function render(ctx) {
   /* ---------------- home ---------------- */
 
   function home() {
-    const count = (type) => ctx.data.content.filter((i) => i.type === type).length;
+    const count = (type) => contentPool(ctx).filter((i) => i.type === type).length;
     return h('div', { class: 'stack stack--lg' },
       h('header', { class: 'page-head' },
         h('div', null,
           h('h1', { class: 'page-title' }, '题库'),
-          h('div', { class: 'page-sub' }, `词汇题 ${ctx.data.questionsVocab.items.length} 道 · 读写题 ${ctx.data.content.length} 篇`),
+          h('div', { class: 'page-sub' }, `词汇题 ${vocabPool(ctx).length} 道 · 读写题 ${contentPool(ctx).length} 篇`),
         ),
       ),
       h('div', { class: 'v-exam__grid' },

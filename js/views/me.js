@@ -1,11 +1,12 @@
 /* views/me.js — settings, AI configuration, backup, about. */
 
 import { h } from '../core/dom.js';
-import { button, card, chips, tag, kv, toast, confirmSheet } from '../ui/components.js';
+import { button, card, chips, tag, kv, toast, confirmSheet, showSheet } from '../ui/components.js';
 import * as ai from '../features/ai.js';
 import * as openai from '../features/providers/openai.js';
 import * as claude from '../features/providers/claude.js';
 import { estimateKnown } from '../domain/engine.js';
+import { parseImport } from '../domain/importer.js';
 import { daysUntil } from '../core/format.js';
 
 const LEVELS = [
@@ -19,7 +20,7 @@ export function render(ctx) {
   const root = h('div', { class: 'v-me stack stack--lg' });
 
   function paint() {
-    root.replaceChildren(headerLite(), profileCard(), statsCard(), aiCard(), backupCard(), aboutCard());
+    root.replaceChildren(headerLite(), profileCard(), statsCard(), aiCard(), importCard(), backupCard(), aboutCard());
   }
 
   function headerLite() {
@@ -138,6 +139,57 @@ export function render(ctx) {
     } catch (error) {
       ctx.toast(ai.friendlyAIError(error), 'error');
     }
+  }
+
+  function importCard() {
+    let text = '';
+    const ta = h('textarea', {
+      class: 'c-textarea', style: { 'min-height': '90px' },
+      placeholder: '粘贴 JSON，例如 {"items": [{"type":"w2m","prompt":"abide","options":["忍受","放弃","加速","测量"],"answer":0,"explain":"abide=忍受"}]}',
+      oninput: (e) => { text = e.target.value; },
+    });
+    return card({
+      children: h('div', { class: 'stack' },
+        h('div', { class: 'bold' }, '导入题库'),
+        h('p', { class: 'xs muted' },
+          '支持词汇题（w2m / m2w / fill / spell）与阅读、选词填空、长篇匹配、翻译、写作。导入内容只存本机，不会上传。'),
+        ta,
+        h('div', { class: 'row' },
+          button({
+            label: '导入', size: 'sm', variant: 'primary',
+            onClick: async () => {
+              const { items, errors } = parseImport(text);
+              if (!items.length) {
+                toast(errors[0] || '没有可导入的题目', 'error');
+                return;
+              }
+              const total = ctx.actions.importQuestions(items);
+              toast(`导入 ${items.length} 题，共 ${total} 题`, 'ok');
+              if (errors.length) {
+                await showSheet({
+                  title: '部分题目被跳过',
+                  body: h('ul', { class: 'stack small' }, errors.slice(0, 8).map((e) => h('li', null, e))),
+                  actions: [{ label: '知道了' }],
+                });
+              }
+              paint();
+            },
+          }),
+          button({
+            label: '清空导入', size: 'sm',
+            onClick: async () => {
+              if (!state.custom.length) { toast('还没有导入的题目'); return; }
+              const ok = await confirmSheet('清空导入', `会删除已导入的 ${state.custom.length} 道题，内置题库不受影响。`, { okLabel: '清空', tone: 'red' });
+              if (!ok) return;
+              ctx.actions.clearImported();
+              toast('已清空');
+              paint();
+            },
+          }),
+        ),
+        h('div', { class: 'xs faint' }, `当前已导入 ${state.custom.length} 题`),
+      ),
+    });
   }
 
   function backupCard() {

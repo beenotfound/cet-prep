@@ -108,6 +108,21 @@ export function createActions({ store, data }) {
       commit();
     },
 
+    /** Replace-by-id append of imported questions. */
+    importQuestions(items) {
+      const s = state();
+      const byId = new Map(s.custom.map((i) => [i.id, i]));
+      for (const item of items) byId.set(item.id, item);
+      s.custom = [...byId.values()];
+      commit();
+      return s.custom.length;
+    },
+
+    clearImported() {
+      state().custom = [];
+      commit();
+    },
+
     setAI(patch) {
       Object.assign(state().ai, patch);
       commit();
