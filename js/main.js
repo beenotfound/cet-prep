@@ -1,4 +1,4 @@
-/* main.js — bootstrap only: load data, build store/router, wire nav. */
+/* main.js — bootstrap: load the light word list, mount the router, prefetch the rest. */
 
 import { loadJSON } from './core/api.js';
 import { createStore } from './core/store.js';
@@ -23,56 +23,82 @@ function syncNav() {
   }
 }
 
-async function loadData() {
-  const [wordsData, vocab, content, papers] = await Promise.all([
-    loadJSON('./data/words.json', { gzip: true }),
-    loadJSON('./data/questions-vocab.json', { gzip: true }),
-    loadJSON('./data/content.json', { gzip: true }),
-    loadJSON('./data/papers.json', { gzip: true }),
-  ]);
-  return {
-    words: wordsData.words,
-    wordsMeta: wordsData.meta,
-    byWord: new Map(wordsData.words.map((w) => [w.w, w])),
-    questionsVocab: vocab,
-    content: content.items,
-    contentById: new Map(content.items.map((i) => [i.id, i])),
-    papers,
-  };
+function errorPanel(error) {
+  const retry = document.createElement('button');
+  retry.className = 'c-btn c-btn--primary';
+  retry.textContent = '重新加载';
+  retry.onclick = () => location.reload();
+  return statePanel('error', { message: `${error.message}。请检查网络后重试。`, action: retry });
 }
 
+/**
+ * Data is split into three waves so the first screen never waits for the whole bank:
+ *   wave 1  words.json          (list: word / ipa / gloss / tags / difficulty)
+ *   wave 2  words-detail.json   (examples + phrases, prefetched in the background)
+ *   wave 3  exam bundle         (vocab questions + passages + papers, on demand)
+ */
 async function boot() {
   mount.replaceChildren(statePanel('loading'));
 
   let data;
   try {
-    data = await loadData();
+    const wordsData = await loadJSON('./data/words.json', { gzip: true });
+    data = {
+      words: wordsData.words,
+      wordsMeta: wordsData.meta,
+      byWord: new Map(wordsData.words.map((w) => [w.w, w])),
+      details: new Map(),
+      detailsReady: false,
+      questionsVocab: { items: [] },
+      content: [],
+      contentById: new Map(),
+      papers: { items: [] },
+      examReady: false,
+    };
   } catch (error) {
-    mount.replaceChildren(statePanel('error', {
-      message: `${error.message}。请检查网络后重试。`,
-      action: (() => {
-        const b = document.createElement('button');
-        b.className = 'c-btn c-btn--primary';
-        b.textContent = '重新加载';
-        b.onclick = () => location.reload();
-        return b;
-      })(),
-    }));
+    mount.replaceChildren(errorPanel(error));
     return;
   }
 
-  const store = createStore({ onError: (message) => toast(message, 'error') });
-  const actions = createActions({ store, data });
+  let detailsPromise = null;
+  let examPromise = null;
 
   const ctx = {
     data,
-    store,
-    actions,
     toast,
-    go: (path) => router.go(path),
-    refresh: () => router.refresh(),
+    ensureDetails() {
+      if (data.detailsReady) return Promise.resolve();
+      if (detailsPromise) return detailsPromise;
+      detailsPromise = loadJSON('./data/words-detail.json', { gzip: true })
+        .then((payload) => {
+          for (const row of payload.items) data.details.set(row.w, row);
+          data.detailsReady = true;
+        })
+        .catch((error) => { detailsPromise = null; throw error; });
+      return detailsPromise;
+    },
+    ensureExamData() {
+      if (data.examReady) return Promise.resolve();
+      if (examPromise) return examPromise;
+      examPromise = Promise.all([
+        loadJSON('./data/questions-vocab.json', { gzip: true }),
+        loadJSON('./data/content.json', { gzip: true }),
+        loadJSON('./data/papers.json', { gzip: true }),
+      ]).then(([vocab, content, papers]) => {
+        data.questionsVocab = vocab;
+        data.content = content.items;
+        data.contentById = new Map(content.items.map((i) => [i.id, i]));
+        data.papers = papers;
+        data.examReady = true;
+      }).catch((error) => { examPromise = null; throw error; });
+      return examPromise;
+    },
   };
-  Object.defineProperty(ctx, 'state', { get: () => store.get() });
+
+  const store = createStore({ onError: (message) => toast(message, 'error') });
+  const actions = createActions({ store, data });
+  ctx.store = store;
+  ctx.actions = actions;
 
   const routes = {
     today,
@@ -86,6 +112,7 @@ async function boot() {
   const router = createRouter({ routes, mount, fallback: today, context: ctx });
   ctx.go = (path) => router.go(path);
   ctx.refresh = () => router.refresh();
+  Object.defineProperty(ctx, 'state', { get: () => store.get() });
 
   for (const button of document.querySelectorAll('.c-nav__item')) {
     button.addEventListener('click', () => router.go(`#/${button.dataset.tab}`));
@@ -98,9 +125,13 @@ async function boot() {
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     navigator.serviceWorker.register('./sw.js').catch(() => { /* offline caching is optional */ });
   }
+
+  // background prefetch: examples only; the exam bundle loads when 题库 is opened
+  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 600));
+  idle(() => { ctx.ensureDetails().catch(() => {}); });
 }
 
 boot().catch((error) => {
   console.error(error);
-  mount.replaceChildren(statePanel('error', { message: String(error?.message || error) }));
+  mount.replaceChildren(errorPanel(error));
 });

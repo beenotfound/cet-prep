@@ -25,7 +25,8 @@ const PRACTICE = [
   { type: 'writing', label: '写作', desc: '范文 + AI 批改', tone: 'yellow' },
 ];
 
-export function render(ctx) {
+export async function render(ctx) {
+  await ctx.ensureExamData();
   const root = h('div', { class: 'v-exam stack stack--lg' });
   let mode = 'home';
   let queue = [];

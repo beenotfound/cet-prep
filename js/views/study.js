@@ -20,22 +20,22 @@ function meanings(word) {
   ));
 }
 
-function examples(word) {
-  if (!word.e?.length) return null;
+function examples(detail) {
+  if (!detail?.e?.length) return null;
   return h('div', { class: 'v-study__block' },
     h('div', { class: 'c-label' }, '例句'),
-    word.e.slice(0, 1).map(([en, cn]) => h('div', { class: 'v-study__example' },
+    detail.e.slice(0, 1).map(([en, cn]) => h('div', { class: 'v-study__example' },
       h('div', { class: 'v-study__en' }, en),
       h('div', { class: 'xs muted' }, cn),
     )),
   );
 }
 
-function phrases(word) {
-  if (!word.p?.length) return null;
+function phrases(detail) {
+  if (!detail?.p?.length) return null;
   return h('div', { class: 'v-study__block' },
     h('div', { class: 'c-label' }, '搭配'),
-    h('div', { class: 'c-pill-row' }, word.p.slice(0, 3).map(([en, cn]) => h('span', { class: 'c-tag', title: cn }, en))),
+    h('div', { class: 'c-pill-row' }, detail.p.slice(0, 3).map(([en, cn]) => h('span', { class: 'c-tag', title: cn }, en))),
   );
 }
 
@@ -81,6 +81,7 @@ export function createStudySession(ctx, { queue, onDone, title = '学习' }) {
     const w = current;
     const st = ctx.state.words[w.w];
     const edge = !st && pKnow(w.d, ctx.state.theta) > ZONES.unknown;
+    const detail = ctx.data.details?.get(w.w);
     return h('div', { class: 'stack' },
       card({
         tape: true,
@@ -111,8 +112,11 @@ export function createStudySession(ctx, { queue, onDone, title = '学习' }) {
             variant: 'yellow',
             children: h('div', { class: 'stack' },
               h('div', { class: 'stack' }, meanings(w)),
-              examples(w),
-              phrases(w),
+              examples(detail),
+              phrases(detail),
+              !detail && !ctx.data.detailsReady
+                ? h('div', { class: 'xs faint' }, '例句正在后台加载…')
+                : null,
               h('div', { style: { 'margin-top': '10px' } },
                 h('button', {
                   type: 'button', class: 'c-btn c-btn--ghost c-btn--sm',
@@ -146,6 +150,11 @@ export function createStudySession(ctx, { queue, onDone, title = '学习' }) {
 
   function reveal() {
     session.revealed = true;
+    if (!ctx.data.detailsReady) {
+      ctx.ensureDetails?.()
+        .then(() => { if (root.isConnected && session.revealed) paint(); })
+        .catch(() => {});
+    }
     paint();
   }
 

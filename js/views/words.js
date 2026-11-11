@@ -198,6 +198,10 @@ export function renderWord(ctx, { w }) {
 
   const st = state.words[word.w];
   const isKnown = Boolean(st?.k);
+  const detail = ctx.data.details?.get(word.w);
+  if (!ctx.data.detailsReady) {
+    ctx.ensureDetails?.().then(() => ctx.refresh?.()).catch(() => {});
+  }
 
   root.append(
     h('header', { class: 'page-head' },
@@ -225,20 +229,20 @@ export function renderWord(ctx, { w }) {
         )),
       ),
     }),
-    word.e?.length ? card({
+    detail?.e?.length ? card({
       variant: 'yellow',
       children: h('div', { class: 'stack' },
         h('div', { class: 'c-label' }, '例句'),
-        word.e.map(([en, cn]) => h('div', { class: 'v-study__example' },
+        detail.e.map(([en, cn]) => h('div', { class: 'v-study__example' },
           h('div', { class: 'v-study__en' }, en),
           h('div', { class: 'xs muted' }, cn),
         )),
       ),
     }) : null,
-    word.p?.length ? card({
+    detail?.p?.length ? card({
       children: h('div', { class: 'stack' },
         h('div', { class: 'c-label' }, '搭配'),
-        h('div', { class: 'c-pill-row' }, word.p.map(([en, cn]) => h('span', { class: 'c-tag', title: cn }, en))),
+        h('div', { class: 'c-pill-row' }, detail.p.map(([en, cn]) => h('span', { class: 'c-tag', title: cn }, en))),
       ),
     }) : null,
     h('div', { class: 'stack' },
