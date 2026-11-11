@@ -31,7 +31,7 @@ export function render(ctx) {
     build(ctx, root);
     return root;
   }
-  root.appendChild(statePanel('loading', { message: '正在加载题库（约 350 KB，仅第一次需要）…' }));
+  root.appendChild(statePanel('loading', { message: '正在加载题库…' }));
   ctx.ensureExamData()
     .then(() => build(ctx, root))
     .catch((error) => {
@@ -200,7 +200,7 @@ function build(ctx, root) {
         : h('div', { class: 'stack' },
             button({ label: '提交答案', variant: 'primary', size: 'lg', block: true, onClick: submit }),
             (item.type === 'translation' || item.type === 'writing')
-              ? h('div', { class: 'xs faint center' }, '主观题不自动判分，提交后可看范文并选择 AI 批改')
+              ? h('div', { class: 'xs faint center' }, '主观题不自动判分，提交后可看范文')
               : null,
           ),
     );
@@ -246,7 +246,7 @@ function build(ctx, root) {
           await showSheet({ title: 'AI 点评', body: h('div', { class: 'small', style: { 'white-space': 'pre-wrap' } }, out), actions: [{ label: '知道了' }] });
         } catch (error) { reportAIError(ctx, error); }
       },
-    }, '🤖 用 AI 批改（需确认后消耗 token）');
+    }, 'AI 批改');
   }
 
   /* ---------------- finish ---------------- */

@@ -68,7 +68,7 @@ export function field({ label, input }) {
 
 export function statePanel(kind, { title, message, action } = {}) {
   const map = {
-    loading: { title: '正在加载…', message: '第一次打开要下载约 300 KB 词库，之后断网也能用' },
+    loading: { title: '正在加载…', message: '正在下载词库' },
     empty: { title: '这里还是空的', message: '' },
     error: { title: '加载失败', message: '' },
   };

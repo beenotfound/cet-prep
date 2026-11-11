@@ -88,8 +88,7 @@ export function render(ctx) {
           h('div', { class: 'bold' }, 'AI 设置'),
           h('span', { class: 'xs muted' }, ai.isConfigured(a) ? '已配置' : '未配置'),
         ),
-        h('p', { class: 'xs muted' },
-          'Key 只保存在本机浏览器，不会上传到任何服务器。每次调用前都会弹确认，不点不消耗。'),
+        h('p', { class: 'xs muted' }, 'Key 只保存在本机。'),
         chips(presets, a.provider, (id) => {
           const preset = ai.PRESETS[id];
           ctx.actions.setAI({
@@ -112,7 +111,7 @@ export function render(ctx) {
           h('input', { class: 'c-input', value: a.model, placeholder: 'deepseek-chat', onchange: (e) => ctx.actions.setAI({ model: e.target.value.trim() }) }),
         ),
         h('div', { class: 'c-field' },
-          h('label', { class: 'c-label' }, '本次会话预算（tokens，0 = 不限）'),
+          h('label', { class: 'c-label' }, '会话预算（0 = 不限）'),
           h('input', {
             class: 'c-input', type: 'number', min: 0, value: a.budget,
             onchange: (e) => { ctx.actions.setAI({ budget: Number(e.target.value) || 0 }); paint(); },
@@ -152,7 +151,7 @@ export function render(ctx) {
       children: h('div', { class: 'stack' },
         h('div', { class: 'bold' }, '导入题库'),
         h('p', { class: 'xs muted' },
-          '支持词汇题（w2m / m2w / fill / spell）与阅读、选词填空、长篇匹配、翻译、写作。导入内容只存本机，不会上传。'),
+          '支持词汇题与阅读 / 选词 / 匹配 / 翻译 / 写作 JSON，只存本机。'),
         ta,
         h('div', { class: 'row' },
           button({
@@ -196,7 +195,7 @@ export function render(ctx) {
     return card({
       children: h('div', { class: 'stack' },
         h('div', { class: 'bold' }, '数据备份'),
-        h('p', { class: 'xs muted' }, '学习记录只存在本机。换设备或清缓存前请先导出。'),
+        h('p', { class: 'xs muted' }, '记录只在本机，换设备前先导出。'),
         h('div', { class: 'row' },
           button({ label: '导出 JSON', size: 'sm', onClick: exportData }),
           button({ label: '导入 JSON', size: 'sm', onClick: () => fileInput.click() }),

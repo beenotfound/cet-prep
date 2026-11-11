@@ -133,7 +133,6 @@ export function render(ctx) {
     return h('div', { class: 'stack stack--lg' },
       h('div', { class: 'row row--between' },
         tag(`过筛 ${sieveIndex + 1} / ${sieveWords.length}`, 'violet'),
-        h('span', { class: 'xs muted' }, '认识的点左边，直接移出队列'),
       ),
       progress(sieveIndex / Math.max(sieveWords.length, 1)),
       card({
@@ -149,7 +148,6 @@ export function render(ctx) {
         button({ label: '眼熟', variant: 'primary', size: 'lg', block: true, onClick: () => sieveAnswer(0.5) }),
         button({ label: '不认识', variant: 'red', size: 'lg', block: true, onClick: () => sieveAnswer(0) }),
       ),
-      h('p', { class: 'xs faint center' }, '认识＝移出队列；眼熟/不认识＝排进学习队列'),
       button({ label: '退出过筛', variant: 'ghost', block: true, onClick: () => { mode = 'list'; paint(); } }),
     );
   }
@@ -258,7 +256,6 @@ export function renderWord(ctx, { w }) {
       }),
       button({ label: '开始学这个词', variant: 'primary', block: true, onClick: () => ctx.go('#/today') }),
     ),
-    h('p', { class: 'xs faint center' }, '改状态会立即影响学习队列'),
   );
 
   function paint() {

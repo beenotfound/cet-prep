@@ -89,6 +89,20 @@
 .c-btn[disabled],
 .c-btn.is-disabled { opacity: 0.45; pointer-events: none; }
 
+/* hover feedback on pointer devices — same lift language as the sidebar */
+@media (hover: hover) {
+  .c-btn:not(.c-btn--ghost):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 var(--ink);
+  }
+  .c-btn:not(.c-btn--ghost):active {
+    transform: translateY(3px);
+    box-shadow: 0 0 0 var(--ink);
+  }
+  .c-btn--ghost:hover { background: var(--paper-3); }
+  .c-chip:hover { background: var(--paper-3); }
+}
+
 /* ---------- chips ---------- */
 .c-chips { display: flex; gap: var(--s2); overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: none; }
 .c-chips::-webkit-scrollbar { display: none; }

@@ -126,20 +126,19 @@ export function createStudySession(ctx, { queue, onDone, title = '学习' }) {
                       await showSheet({ title: `AI 解释 · ${w.w}`, body: h('div', { class: 'small', style: { 'white-space': 'pre-wrap' } }, text), actions: [{ label: '知道了' }] });
                     } catch (error) { reportAIError(ctx, error); }
                   },
-                }, '🤖 AI 解释'),
+                }, 'AI 解释'),
               ),
             ),
           })
         : h('div', { class: 'stack' },
             button({ label: '显示释义', variant: 'primary', size: 'lg', block: true, onClick: reveal }),
-            h('p', { class: 'xs faint center' }, '先自己回想，再点开答案，记得更牢'),
           ),
       session.revealed ? gradeRow(w) : null,
       h('div', { class: 'row row--between' },
         h('button', {
           type: 'button', class: 'c-btn c-btn--ghost c-btn--sm',
           onclick: () => { ctx.actions.markKnown(w); session.index++; session.revealed = false; paint(); },
-        }, '我会了，别再推'),
+        }, '我会了'),
         h('button', {
           type: 'button', class: 'c-btn c-btn--ghost c-btn--sm',
           onclick: () => { session.index++; session.revealed = false; paint(); },
@@ -160,7 +159,7 @@ export function createStudySession(ctx, { queue, onDone, title = '学习' }) {
 
   function gradeRow(w) {
     const opts = [
-      { g: 0, label: '忘记', variant: 'red' },
+      { g: 0, label: '不认识', variant: 'red' },
       { g: 1, label: '模糊', variant: '' },
       { g: 2, label: '认识', variant: 'mint' },
       { g: 3, label: '熟练', variant: 'blue' },

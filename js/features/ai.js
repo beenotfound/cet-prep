@@ -55,8 +55,6 @@ function consentBody({ preview, ai, estimate, sessionTokens }) {
     h('div', { class: 'c-kv' }, h('span', { class: 'muted' }, '模型'), h('span', { class: 'bold' }, `${presetOf(ai.provider).label} · ${ai.model}`)),
     h('div', { class: 'c-kv' }, h('span', { class: 'muted' }, '预计消耗'), h('span', { class: 'bold' }, `≈ ${estimate} tokens`)),
     h('div', { class: 'c-kv' }, h('span', { class: 'muted' }, '本次会话已用'), h('span', { class: 'bold' }, `${sessionTokens || 0} tokens`)),
-    h('p', { class: 'xs faint', style: { 'margin-top': '8px' } },
-      '只有你点“发送并消耗”才会真正调用。不点，不花一分钱。'),
   );
 }
 

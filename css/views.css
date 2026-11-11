@@ -198,6 +198,12 @@
   border-top: 1px dashed rgba(30, 30, 30, 0.14);
 }
 
+@media (hover: hover) {
+  .v-words__row:hover { background: var(--paper-3); }
+  .v-exam__option:hover { background: var(--paper-3); }
+  .v-exam__option.is-picked:hover { background: var(--yellow); }
+}
+
 /* ---------------- me ---------------- */
 .v-me .c-input { font-size: 15px; }
 

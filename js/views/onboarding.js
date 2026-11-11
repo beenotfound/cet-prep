@@ -48,7 +48,7 @@ export function render(ctx) {
         h('div', { class: 'c-tape' }),
         h('h1', { class: 'page-title' }, '先花 ', h('span', { class: 'marked' }, '3 分钟'), ' 认清自己'),
         h('p', { class: 'muted small', style: { 'margin-top': '8px' } },
-          '不再从"abandon"开始。我们只测你还没掌握的词，已经会的一律不推给你。'),
+          '只测你还没掌握的词。已经会的，不再推给你。'),
       ),
       card({
         tape: true,
@@ -73,7 +73,6 @@ export function render(ctx) {
       h('div', { class: 'stack' },
         button({ label: '开始 3 分钟校准', variant: 'primary', size: 'lg', block: true, onClick: startQuiz }),
         button({ label: '跳过，直接开始学', variant: 'ghost', block: true, onClick: skip }),
-        h('p', { class: 'xs faint center' }, '校准完全在本机计算，不联网、不消耗 token'),
       ),
     );
   }
@@ -130,7 +129,7 @@ export function render(ctx) {
         ),
       }),
       answerRow(answer),
-      h('p', { class: 'xs faint center' }, '「眼熟」＝见过但说不出意思，按半对计算'),
+      h('p', { class: 'xs faint center' }, '「眼熟」＝见过，但说不出意思'),
     );
   }
 
@@ -189,7 +188,7 @@ export function render(ctx) {
         children: h('div', { class: 'stack center', style: { 'min-height': '200px', 'justify-content': 'center' } },
           h('div', { class: 'v-onboard__wordtext display' }, item.w.w),
           item.w.i ? h('div', { class: 'muted small' }, `/${item.w.i}/`) : null,
-          h('div', { class: 'xs faint' }, '再确认一次，帮我们把边界校准准'),
+          h('div', { class: 'xs faint' }, '再确认一次'),
         ),
       }),
       answerRow(spotAnswer),
@@ -204,7 +203,6 @@ export function render(ctx) {
     return h('div', { class: 'stack stack--lg' },
       h('header', null,
         h('h1', { class: 'page-title' }, '你的词表已生成'),
-        h('p', { class: 'muted small' }, '下面这些词会进入学习队列；右边那栏不会。'),
       ),
       card({
         tape: true,
@@ -225,17 +223,13 @@ export function render(ctx) {
       state.calib.spot ? card({
         variant: 'blue',
         children: h('div', { class: 'small' },
-          `抽检结果：猜你会 ${state.calib.spot.knownHits}/${state.calib.spot.knownN} 命中，猜你不会 ${state.calib.spot.unknownN - state.calib.spot.unknownHits}/${state.calib.spot.unknownN} 命中。`,
-          h('div', { class: 'xs faint', style: { 'margin-top': '4px' } }, '命中率低于 80% 时，模型已自动放宽边界。'),
-        ),
+          `抽检结果：猜你会 ${state.calib.spot.knownHits}/${state.calib.spot.knownN} 命中，猜你不会 ${state.calib.spot.unknownN - state.calib.spot.unknownHits}/${state.calib.spot.unknownN} 命中。`),
       }) : null,
       h('div', { class: 'stack' },
         button({ label: '开始今天的词', variant: 'primary', size: 'lg', block: true, onClick: () => ctx.go('#/today') }),
-        button({ label: '抽检 10 个词，校准更准', variant: 'ghost', block: true, onClick: startSpot }),
+        button({ label: '抽检 10 个词', variant: 'ghost', block: true, onClick: startSpot }),
         button({ label: '重新测一次', variant: 'ghost', block: true, onClick: () => { step = 'intro'; paint(); } }),
       ),
-      h('p', { class: 'xs faint center' },
-        '学习过程中点「我会了」的词会被永久移出队列；随时可在「我的」里重新校准。'),
     );
   }
 
