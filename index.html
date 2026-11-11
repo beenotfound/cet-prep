@@ -14,6 +14,27 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
   <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <!-- Preload the module graph so a high-latency link doesn't walk 24 imports one by one. -->
+  <link rel="modulepreload" href="./js/core/dom.js">
+  <link rel="modulepreload" href="./js/core/format.js">
+  <link rel="modulepreload" href="./js/core/api.js">
+  <link rel="modulepreload" href="./js/core/store.js">
+  <link rel="modulepreload" href="./js/core/actions.js">
+  <link rel="modulepreload" href="./js/core/router.js">
+  <link rel="modulepreload" href="./js/domain/engine.js">
+  <link rel="modulepreload" href="./js/domain/exam.js">
+  <link rel="modulepreload" href="./js/domain/importer.js">
+  <link rel="modulepreload" href="./js/ui/components.js">
+  <link rel="modulepreload" href="./js/features/ai.js">
+  <link rel="modulepreload" href="./js/features/providers/openai.js">
+  <link rel="modulepreload" href="./js/features/providers/claude.js">
+  <link rel="modulepreload" href="./js/views/today.js">
+  <link rel="modulepreload" href="./js/views/words.js">
+  <link rel="modulepreload" href="./js/views/study.js">
+  <link rel="modulepreload" href="./js/views/exam.js">
+  <link rel="modulepreload" href="./js/views/exam-items.js">
+  <link rel="modulepreload" href="./js/views/me.js">
+  <link rel="modulepreload" href="./js/views/onboarding.js">
   <link rel="stylesheet" href="./css/tokens.css">
   <link rel="stylesheet" href="./css/base.css">
   <link rel="stylesheet" href="./css/components.css">
