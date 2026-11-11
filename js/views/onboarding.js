@@ -98,10 +98,18 @@ export function render(ctx) {
     paint();
   }
 
-  function answer(known) {
-    cal.answer(current, known);
+  function answer(score) {
+    cal.answer(current, score);
     if (cal.done) finishQuiz();
     else next();
+  }
+
+  function answerRow(onPick) {
+    return h('div', { class: 'answer-row' },
+      button({ label: '认识', variant: 'mint', size: 'lg', block: true, onClick: () => onPick(1) }),
+      button({ label: '眼熟', variant: 'primary', size: 'lg', block: true, onClick: () => onPick(0.5) }),
+      button({ label: '不认识', variant: 'red', size: 'lg', block: true, onClick: () => onPick(0) }),
+    );
   }
 
   function quiz() {
@@ -118,14 +126,11 @@ export function render(ctx) {
         children: h('div', { class: 'stack center', style: { 'min-height': '200px', 'justify-content': 'center' } },
           h('div', { class: 'v-onboard__wordtext display' }, current.w),
           current.i ? h('div', { class: 'muted small' }, `/${current.i}/`) : null,
-          h('div', { class: 'xs faint' }, '你认识这个词吗？'),
+          h('div', { class: 'xs faint' }, '这个词你…'),
         ),
       }),
-      h('div', { class: 'row' },
-        button({ label: '认识', variant: 'mint', size: 'lg', block: true, onClick: () => answer(true) }),
-        button({ label: '不认识', variant: 'red', size: 'lg', block: true, onClick: () => answer(false) }),
-      ),
-      h('p', { class: 'xs faint center' }, '凭第一反应即可，测试会自动调整难度'),
+      answerRow(answer),
+      h('p', { class: 'xs faint center' }, '「眼熟」＝见过但说不出意思，按半对计算'),
     );
   }
 
@@ -148,8 +153,9 @@ export function render(ctx) {
     paint();
   }
 
-  function spotAnswer(known) {
+  function spotAnswer(score) {
     const item = spot[spotIndex];
+    const known = score >= 0.5;
     if (item.expect === 'known') { hits.knownN++; if (known) hits.known++; }
     else { hits.unknownN++; if (known) hits.unknown++; }
     spotIndex++;
@@ -186,10 +192,7 @@ export function render(ctx) {
           h('div', { class: 'xs faint' }, '再确认一次，帮我们把边界校准准'),
         ),
       }),
-      h('div', { class: 'row' },
-        button({ label: '认识', variant: 'mint', size: 'lg', block: true, onClick: () => spotAnswer(true) }),
-        button({ label: '不认识', variant: 'red', size: 'lg', block: true, onClick: () => spotAnswer(false) }),
-      ),
+      answerRow(spotAnswer),
     );
   }
 

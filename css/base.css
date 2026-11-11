@@ -102,7 +102,7 @@ img, svg { max-width: 100%; }
 }
 
 @media (min-width: 900px) {
-  body { padding-bottom: var(--s6); padding-left: 96px; }
+  body { padding-bottom: var(--s6); padding-left: 108px; }
   #app { padding: var(--s6) var(--s5); }
   .page-title { font-size: var(--fs-2xl); }
 }

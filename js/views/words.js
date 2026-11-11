@@ -113,10 +113,10 @@ export function render(ctx) {
     paint();
   }
 
-  function sieveAnswer(known) {
+  function sieveAnswer(score) {
     const w = sieveWords[sieveIndex];
-    ctx.actions.sieveAnswer(w, known);
-    if (known) sieveKnown++;
+    ctx.actions.sieveAnswer(w, score);
+    if (score >= 1) sieveKnown++;
     sieveIndex++;
     if (sieveIndex >= sieveWords.length) {
       mode = 'list';
@@ -144,10 +144,12 @@ export function render(ctx) {
           (w.t || []).slice(0, 1).map(([, cn]) => h('div', { class: 'xs muted' }, cn)),
         ),
       }),
-      h('div', { class: 'row' },
-        button({ label: '认识', variant: 'mint', size: 'lg', block: true, onClick: () => sieveAnswer(true) }),
-        button({ label: '不认识', variant: 'red', size: 'lg', block: true, onClick: () => sieveAnswer(false) }),
+      h('div', { class: 'answer-row' },
+        button({ label: '认识', variant: 'mint', size: 'lg', block: true, onClick: () => sieveAnswer(1) }),
+        button({ label: '眼熟', variant: 'primary', size: 'lg', block: true, onClick: () => sieveAnswer(0.5) }),
+        button({ label: '不认识', variant: 'red', size: 'lg', block: true, onClick: () => sieveAnswer(0) }),
       ),
+      h('p', { class: 'xs faint center' }, '认识＝移出队列；眼熟/不认识＝排进学习队列'),
       button({ label: '退出过筛', variant: 'ghost', block: true, onClick: () => { mode = 'list'; paint(); } }),
     );
   }

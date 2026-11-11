@@ -29,16 +29,17 @@ export function clamp(x, lo, hi) {
 
 /* ---------------------------------------------------------------- answers */
 
-export function recordAnswer(ctx, word, known) {
+export function recordAnswer(ctx, word, score) {
   const { theta, k } = ctx;
+  const s = score === true ? 1 : score === false ? 0 : Number(score);
   const p = pKnow(word.d, theta, (ctx.state.words[word.w] || {}).o || 0);
-  const nextTheta = clamp(theta + k * ((known ? 1 : 0) - p), -2, 12);
+  const nextTheta = clamp(theta + k * (s - p), -2, 12);
   const words = ctx.state.words;
   const w = words[word.w] || (words[word.w] = { seen: 0, wrong: 0, o: 0 });
   w.seen = (w.seen || 0) + 1;
-  if (!known) w.wrong = (w.wrong || 0) + 1;
-  // small per-word correction so repeated surprises stick
-  w.o = clamp((w.o || 0) + (known ? -0.25 : 0.25) * (1 - Math.abs(p - 0.5) * 2), -3, 3);
+  if (s < 0.5) w.wrong = (w.wrong || 0) + 1;
+  // small per-word correction so repeated surprises stick ("眼熟" = neutral)
+  w.o = clamp((w.o || 0) + (0.5 - s) * 0.5 * (1 - Math.abs(p - 0.5) * 2), -3, 3);
   ctx.theta = nextTheta;
   return nextTheta;
 }
@@ -129,10 +130,12 @@ export class Calibrator {
     return pick.w;
   }
 
-  answer(word, known) {
-    this.answers.push({ w: word.w, d: word.d, known });
+  /** score: 1 = 认识, 0.5 = 眼熟（见过但说不出意思）, 0 = 不认识 */
+  answer(word, score) {
+    const s = score === true ? 1 : score === false ? 0 : Number(score);
+    this.answers.push({ w: word.w, d: word.d, score: s });
     const p = pKnow(word.d, this.theta);
-    this.theta = clamp(this.theta + this.k * ((known ? 1 : 0) - p), -2, 12);
+    this.theta = clamp(this.theta + this.k * (s - p), -2, 12);
     // crude Fisher-information standard error
     const info = this.answers.reduce((acc, a) => {
       const pp = pKnow(a.d, this.theta);

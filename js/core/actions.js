@@ -35,12 +35,13 @@ export function createActions({ store, data }) {
       commit();
     },
 
-    /** Onboarding calibration tap: does not create an SRS schedule yet. */
-    calibrateAnswer(word, known) {
-      const s = state();
-      s.theta = E.recordAnswer({ state: s, theta: s.theta, k: 0.9 }, word, known);
-      E.bumpDay(s, 'total');
-      if (known) E.bumpDay(s, 'correct');
+    /** Onboarding calibration tap: 1 = 认识, 0.5 = 眼熟, 0 = 不认识. */
+    calibrateAnswer(word, score) {
+      const s = Number(score);
+      const st = state();
+      st.theta = E.recordAnswer({ state: st, theta: st.theta, k: 0.9 }, word, s);
+      E.bumpDay(st, 'total');
+      if (s >= 0.5) E.bumpDay(st, 'correct');
       commit();
     },
 
@@ -73,14 +74,14 @@ export function createActions({ store, data }) {
       commit();
     },
 
-    /** Sieve mode: "认识" retires the word, "不认识" pushes it into the queue. */
-    sieveAnswer(word, known) {
+    /** Sieve mode: 1 = 认识（退役）, 0.5 = 眼熟（推进队列）, 0 = 不认识（推进队列）。 */
+    sieveAnswer(word, score) {
       const s = state();
-      if (known) {
+      if (score >= 1) {
         E.markKnown(s, word, true);
       } else {
         const w = s.words[word.w] || (s.words[word.w] = { seen: 0, wrong: 0, o: 0 });
-        w.o = E.clamp((w.o || 0) + 0.9, -3, 4);
+        w.o = E.clamp((w.o || 0) + (score >= 0.5 ? 0.4 : 0.9), -3, 4);
       }
       commit();
     },

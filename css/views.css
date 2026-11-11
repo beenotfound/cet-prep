@@ -1,5 +1,13 @@
 /* css/views.css — per-view layout. One section per view. */
 
+/* shared 三档作答行：认识 / 眼熟 / 不认识 */
+.answer-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s2);
+}
+.answer-row .c-btn { width: 100%; padding: 0 4px; }
+
 /* ---------------- onboarding ---------------- */
 .v-onboard__head {
   position: relative;
