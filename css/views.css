@@ -209,12 +209,14 @@
     gap: var(--s5);
     align-items: start;
   }
-  .v-exam__pane--passage {
-    position: sticky;
-    top: 12px;
-    max-height: calc(100dvh - 160px);
+  /* each column scrolls on its own; overscroll-behavior stops the page from moving */
+  .v-exam__pane {
+    max-height: calc(100dvh - 300px);
     overflow: auto;
-    padding-right: 4px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 6px;
+    scrollbar-width: thin;
   }
 }
 
