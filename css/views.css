@@ -198,6 +198,26 @@
   border-top: 1px dashed rgba(30, 30, 30, 0.14);
 }
 
+/* passage + questions side by side on wide screens */
+.v-exam__split { display: flex; flex-direction: column; gap: var(--s4); }
+.v-exam__pane { min-width: 0; }
+
+@media (min-width: 760px) {
+  .v-exam__split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--s5);
+    align-items: start;
+  }
+  .v-exam__pane--passage {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100dvh - 160px);
+    overflow: auto;
+    padding-right: 4px;
+  }
+}
+
 @media (hover: hover) {
   .v-words__row:hover { background: var(--paper-3); }
   .v-exam__option:hover { background: var(--paper-3); }

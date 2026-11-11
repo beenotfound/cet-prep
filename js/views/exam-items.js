@@ -68,15 +68,17 @@ export function renderItem(ctx, item) {
   }
 
   if (item.type === 'reading') {
-    const el = h('div', { class: 'stack' },
-      h('div', { class: 'v-exam__passage' }, paragraphs(item.passage)),
-      item.questions.map((q, qi) => h('div', { class: 'stack', style: { 'margin-top': '18px' } },
-        h('div', { class: 'bold' }, `${qi + 1}. ${q.q}`),
-        optionList(q.options, store.answers[qi], (i) => {
-          store.answers[qi] = i;
-          el.dispatchEvent(new CustomEvent('answer-change'));
-        }),
-      )),
+    const questions = item.questions.map((q, qi) => h('div', { class: 'stack', style: { 'margin-top': qi === 0 ? '0' : '18px' } },
+      h('div', { class: 'bold' }, `${qi + 1}. ${q.q}`),
+      optionList(q.options, store.answers[qi], (i) => {
+        store.answers[qi] = i;
+        el.dispatchEvent(new CustomEvent('answer-change'));
+      }),
+    ));
+    const el = h('div', { class: 'v-exam__split' },
+      h('div', { class: 'v-exam__pane v-exam__pane--passage' },
+        h('div', { class: 'v-exam__passage' }, paragraphs(item.passage))),
+      h('div', { class: 'v-exam__pane v-exam__pane--questions' }, questions),
     );
     return { el, getResponse: () => store.answers };
   }
@@ -99,8 +101,11 @@ export function renderItem(ctx, item) {
           h('div', { class: 'c-label' }, '词库（15 选 10）'),
           h('div', { class: 'c-pill-row' }, item.bank.map((w) => h('span', { class: 'c-tag' }, w))),
         ),
-        passage,
-        h('div', { class: 'stack', style: { 'margin-top': '14px' } }, selects),
+        h('div', { class: 'v-exam__split' },
+          h('div', { class: 'v-exam__pane v-exam__pane--passage' }, passage),
+          h('div', { class: 'v-exam__pane v-exam__pane--questions' },
+            h('div', { class: 'stack' }, selects)),
+        ),
       ),
       getResponse: () => store.answers,
     };

@@ -119,13 +119,9 @@ export function render(ctx) {
         ),
 
     readingPick ? card({
-      variant: 'blue',
       tape: true,
       children: h('div', { class: 'stack' },
-        h('div', { class: 'row row--between' },
-          h('div', { class: 'bold' }, '今天读哪篇'),
-          tag('刚好难一点', 'violet'),
-        ),
+        h('div', { class: 'bold' }, '今天读哪篇'),
         h('div', { class: 'bold small', style: { 'margin-top': '6px' } }, readingPick.passage.title),
         h('div', { class: 'xs muted' },
           `生词率 ${((1 - readingPick.ratio) * 100).toFixed(1)}% · 还差 ${readingPick.unknownWords} 个词就全认识`),
