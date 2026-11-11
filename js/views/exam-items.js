@@ -56,6 +56,7 @@ export function renderItem(ctx, item) {
       class: 'c-input', type: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false',
       placeholder: '拼写这个单词', oninput: (e) => { store.text = e.target.value; },
     });
+    input.value = store.text;
     return {
       el: h('div', { class: 'stack' },
         h('div', { class: 'c-label' }, item.prompt),
@@ -130,6 +131,7 @@ export function renderItem(ctx, item) {
       class: 'c-textarea', placeholder: item.type === 'translation' ? '在这里写英文译文…' : '在这里写作文…',
       oninput: (e) => { store.text = e.target.value; },
     });
+    ta.value = store.text;
     return {
       el: h('div', { class: 'stack' },
         h('div', { class: 'v-exam__passage' }, paragraphs(item.prompt)),

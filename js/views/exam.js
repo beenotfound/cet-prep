@@ -3,9 +3,8 @@
 import { h } from '../core/dom.js';
 import { button, card, tag, progress, toast, showSheet, statePanel } from '../ui/components.js';
 import { renderItem, feedbackView } from './exam-items.js';
-import { gradeItem } from '../domain/exam.js';
+import { gradeItem, formatClock } from '../domain/exam.js';
 import { gradeTranslation, gradeWriting, reportAIError } from '../features/ai.js';
-import { formatClock } from '../domain/exam.js';
 
 const TYPE_LABEL = {
   vocab: '词汇速练', reading: '仔细阅读', cloze: '选词填空',
@@ -25,16 +24,16 @@ const PRACTICE = [
   { type: 'writing', label: '写作', desc: '范文 + AI 批改', tone: 'yellow' },
 ];
 
-/** Shows a loading state immediately, then builds the real view once the exam bundle arrives. */
+/** Shows a loading state immediately, then fills the same root once the exam bundle arrives. */
 export function render(ctx) {
   const root = h('div', { class: 'v-exam stack stack--lg' });
   if (ctx.data.examReady) {
-    root.appendChild(build(ctx));
+    build(ctx, root);
     return root;
   }
   root.appendChild(statePanel('loading', { message: '正在加载题库（约 350 KB，仅第一次需要）…' }));
   ctx.ensureExamData()
-    .then(() => root.replaceChildren(build(ctx)))
+    .then(() => build(ctx, root))
     .catch((error) => {
       root.replaceChildren(statePanel('error', {
         message: error.message,
@@ -44,8 +43,7 @@ export function render(ctx) {
   return root;
 }
 
-function build(ctx) {
-  const root = h('div', { class: 'v-exam stack stack--lg' });
+function build(ctx, root) {
   let mode = 'home';
   let queue = [];
   let idx = 0;
@@ -55,8 +53,21 @@ function build(ctx) {
   let paperTitle = '';
   let timer = null;
   let startedAt = 0;
+  let clockEl = null;
+  let runnerIdx = -1;
 
   function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
+
+  /** Only the clock text is updated every second — repainting the view would
+   *  rebuild <details>/<textarea> and lose the user's open state and input. */
+  function startTimer() {
+    stopTimer();
+    startedAt = Date.now();
+    timer = setInterval(() => {
+      if (mode !== 'run' || !clockEl || !clockEl.isConnected) return;
+      clockEl.textContent = `⏱ ${formatClock(Date.now() - startedAt)}`;
+    }, 1000);
+  }
 
   function startPractice(type) {
     let items;
@@ -72,9 +83,9 @@ function build(ctx) {
     session = { correct: 0, total: 0, pending: 0, byType: {} };
     paperTitle = TYPE_LABEL[type] || type;
     mode = 'run';
-    startedAt = Date.now();
-    stopTimer();
-    timer = setInterval(() => { if (mode === 'run') paint(); }, 1000);
+    runnerIdx = -1;
+    clockEl = null;
+    startTimer();
     paint();
   }
 
@@ -93,9 +104,9 @@ function build(ctx) {
     session = { correct: 0, total: 0, pending: 0, byType: {} };
     paperTitle = paper.title || '模拟卷';
     mode = 'run';
-    startedAt = Date.now();
-    stopTimer();
-    timer = setInterval(() => { if (mode === 'run') paint(); }, 1000);
+    runnerIdx = -1;
+    clockEl = null;
+    startTimer();
     paint();
   }
 
@@ -167,14 +178,17 @@ function build(ctx) {
     const entry = queue[idx];
     if (!entry) return finish();
     const item = entry.item;
-    if (!answered) runner = renderItem(ctx, item);
+    if (!answered && runnerIdx !== idx) {
+      runner = renderItem(ctx, item);
+      runnerIdx = idx;
+    }
 
-    const elapsed = startedAt ? formatClock(Date.now() - startedAt) : '';
+    clockEl = h('span', { class: 'small bold', dataset: { clock: '1' } }, `⏱ ${formatClock(startedAt ? Date.now() - startedAt : 0)}`);
     return h('div', { class: 'stack' },
       h('div', { class: 'row row--between' },
         tag(paperTitle, 'yellow'),
         h('span', { class: 'small muted' }, `${Math.min(idx + 1, queue.length)} / ${queue.length}`),
-        h('span', { class: 'small bold' }, `⏱ ${elapsed}`),
+        clockEl,
       ),
       progress(idx / queue.length),
       card({ tape: true, children: answered ? feedbackView(item, entry.result) : runner.el }),
