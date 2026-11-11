@@ -48,7 +48,11 @@ export function createStudySession(ctx, { queue, onDone, title = '学习' }) {
   let finished = false;
 
   const keyHandler = (e) => {
-    if (!root.isConnected || finished) return;
+    if (!root.isConnected) {
+      document.removeEventListener('keydown', keyHandler);   // session was left
+      return;
+    }
+    if (finished) return;
     if (e.target.matches('input, textarea, select')) return;
     if (e.code === 'Space') { e.preventDefault(); if (!session.revealed) reveal(); return; }
     if (session.revealed && ['1', '2', '3', '4'].includes(e.key)) grade(Number(e.key) - 1);

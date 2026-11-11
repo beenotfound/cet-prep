@@ -107,6 +107,10 @@ export function render(ctx) {
       })
       .sort((a, b) => Math.abs(a.d - theta) - Math.abs(b.d - theta))
       .slice(0, 30);
+    if (!sieveWords.length) {
+      toast('暂时没有待确认的词');
+      return;
+    }
     sieveIndex = 0;
     sieveKnown = 0;
     mode = 'sieve';

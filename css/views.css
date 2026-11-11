@@ -211,7 +211,7 @@
   }
   /* each column scrolls on its own; overscroll-behavior stops the page from moving */
   .v-exam__pane {
-    max-height: calc(100dvh - 300px);
+    max-height: max(240px, calc(100dvh - 300px));
     overflow: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;

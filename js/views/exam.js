@@ -25,6 +25,15 @@ const PRACTICE = [
 ];
 
 /** Shows a loading state immediately, then fills the same root once the exam bundle arrives. */
+function shuffle(items) {
+  const copy = items.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
 export function render(ctx) {
   const root = h('div', { class: 'v-exam stack stack--lg' });
   if (ctx.data.examReady) {
@@ -64,7 +73,10 @@ function build(ctx, root) {
     stopTimer();
     startedAt = Date.now();
     timer = setInterval(() => {
-      if (mode !== 'run' || !clockEl || !clockEl.isConnected) return;
+      if (!root.isConnected || mode !== 'run' || !clockEl || !clockEl.isConnected) {
+        if (!root.isConnected) stopTimer();   // view was navigated away: clean up
+        return;
+      }
       clockEl.textContent = `⏱ ${formatClock(Date.now() - startedAt)}`;
     }, 1000);
   }
@@ -89,7 +101,8 @@ function build(ctx, root) {
     if (type === 'vocab') {
       items = pickVocab(ctx, 20);
     } else {
-      items = contentPool(ctx).filter((i) => i.type === type && matchesLevel(i)).slice(0, type === 'translation' ? 3 : type === 'writing' ? 3 : 5);
+      const pool = contentPool(ctx).filter((i) => i.type === type && matchesLevel(i));
+      items = shuffle(pool).slice(0, type === 'translation' ? 3 : type === 'writing' ? 3 : 5);
     }
     begin(items.map((item) => ({ item })), TYPE_LABEL[type] || type);
   }
@@ -171,7 +184,7 @@ function build(ctx, root) {
 
   function run() {
     const entry = queue[idx];
-    if (!entry) return finish();
+    if (!entry) return null;
     const item = entry.item;
     if (!answered && runnerIdx !== idx) {
       runner = renderItem(ctx, item);
@@ -190,7 +203,7 @@ function build(ctx, root) {
       answered
         ? h('div', { class: 'stack' },
             (item.type === 'translation' || item.type === 'writing') ? aiGradeButton(item, entry.response) : null,
-            button({ label: idx + 1 >= queue.length ? '查看结果' : '下一题', variant: 'primary', block: true, onClick: () => { idx++; answered = false; paint(); } }),
+            button({ label: idx + 1 >= queue.length ? '查看结果' : '下一题', variant: 'primary', block: true, onClick: next }),
           )
         : h('div', { class: 'stack' },
             button({ label: '提交答案', variant: 'primary', size: 'lg', block: true, onClick: submit }),
@@ -206,7 +219,9 @@ function build(ctx, root) {
     const item = entry.item;
     const response = runner.getResponse();
     if (item.type !== 'translation' && item.type !== 'writing') {
-      if (response == null || (Array.isArray(response) && response.every((x) => x == null || x === ''))) {
+      if (response == null
+        || (typeof response === 'string' && !response.trim())
+        || (Array.isArray(response) && response.every((x) => x == null || x === ''))) {
         toast('先作答再提交');
         return;
       }
@@ -245,6 +260,16 @@ function build(ctx, root) {
   }
 
   /* ---------------- finish ---------------- */
+
+  function next() {
+    idx++;
+    answered = false;
+    if (idx >= queue.length) {
+      finish();
+      return;
+    }
+    paint();
+  }
 
   function finish() {
     stopTimer();
@@ -285,8 +310,10 @@ function build(ctx, root) {
 
   function paint() {
     if (mode === 'home') root.replaceChildren(home());
-    else if (mode === 'run') root.replaceChildren(run());
-    else root.replaceChildren(result());
+    else if (mode === 'run') {
+      const el = run();
+      if (el) root.replaceChildren(el);
+    } else root.replaceChildren(result());
   }
 
   // one-shot hand-off from another view ("read this passage")
