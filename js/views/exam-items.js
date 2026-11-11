@@ -9,16 +9,29 @@ function paragraphs(text) {
 }
 
 function optionList(options, selected, onPick) {
-  return h('div', { class: 'v-exam__options' },
-    options.map((text, i) => h('button', {
-      type: 'button',
-      class: ['v-exam__option', selected === i && 'is-picked'].filter(Boolean).join(' '),
-      onclick: () => onPick(i),
-    },
-      h('span', { class: 'v-exam__badge' }, String.fromCharCode(65 + i)),
-      h('span', { class: 'grow' }, text),
-    )),
-  );
+  const wrap = h('div', { class: 'v-exam__options' });
+  let current = selected;
+
+  function paint() {
+    wrap.replaceChildren(
+      ...options.map((text, i) => h('button', {
+        type: 'button',
+        class: ['v-exam__option', current === i && 'is-picked'].filter(Boolean).join(' '),
+        'aria-pressed': current === i ? 'true' : 'false',
+        onclick: () => {
+          current = i;
+          paint();
+          onPick(i);
+        },
+      },
+        h('span', { class: 'v-exam__badge' }, String.fromCharCode(65 + i)),
+        h('span', { class: 'grow' }, text),
+      )),
+    );
+  }
+
+  paint();
+  return wrap;
 }
 
 function selectRow(labels, value, onChange, placeholder = '选择') {
