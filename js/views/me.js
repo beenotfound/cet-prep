@@ -255,6 +255,8 @@ export function render(ctx) {
         h('div', { class: 'xs muted' },
           '词库数据来自 KyleBing/english-vocabulary（BSD-3-Clause），难度由 hermitdave/FrequencyWords（MIT）词频估算。',
           h('br'),
+          '阅读覆盖率按站内 32 篇阅读语料的词频加权估算。',
+          h('br'),
           '题目为原创或程序生成，不含受版权保护的真题原文。',
           h('br'),
           '听力模块未内置（原音频需配套真题文本，版权受限）。',

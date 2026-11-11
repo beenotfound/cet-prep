@@ -69,6 +69,21 @@ function build(ctx, root) {
     }, 1000);
   }
 
+  function begin(entries, title) {
+    if (!entries.length) { ctx.toast('这里还没有内容'); return false; }
+    queue = entries;
+    idx = 0;
+    answered = false;
+    session = { correct: 0, total: 0, pending: 0, byType: {} };
+    paperTitle = title;
+    mode = 'run';
+    runnerIdx = -1;
+    clockEl = null;
+    startTimer();
+    paint();
+    return true;
+  }
+
   function startPractice(type) {
     let items;
     if (type === 'vocab') {
@@ -76,17 +91,7 @@ function build(ctx, root) {
     } else {
       items = contentPool(ctx).filter((i) => i.type === type && matchesLevel(i)).slice(0, type === 'translation' ? 3 : type === 'writing' ? 3 : 5);
     }
-    if (!items.length) { ctx.toast('这个题型还没有内容'); return; }
-    queue = items.map((item) => ({ item }));
-    idx = 0;
-    answered = false;
-    session = { correct: 0, total: 0, pending: 0, byType: {} };
-    paperTitle = TYPE_LABEL[type] || type;
-    mode = 'run';
-    runnerIdx = -1;
-    clockEl = null;
-    startTimer();
-    paint();
+    begin(items.map((item) => ({ item })), TYPE_LABEL[type] || type);
   }
 
   function startPaper(paper) {
@@ -97,17 +102,7 @@ function build(ctx, root) {
         if (item) items.push({ item, si, ii });
       });
     });
-    if (!items.length) { ctx.toast('这套卷还没有内容'); return; }
-    queue = items;
-    idx = 0;
-    answered = false;
-    session = { correct: 0, total: 0, pending: 0, byType: {} };
-    paperTitle = paper.title || '模拟卷';
-    mode = 'run';
-    runnerIdx = -1;
-    clockEl = null;
-    startTimer();
-    paint();
+    begin(items, paper.title || '模拟卷');
   }
 
   function matchesLevel(item) {
@@ -292,6 +287,14 @@ function build(ctx, root) {
     if (mode === 'home') root.replaceChildren(home());
     else if (mode === 'run') root.replaceChildren(run());
     else root.replaceChildren(result());
+  }
+
+  // one-shot hand-off from another view ("read this passage")
+  if (ctx.pending?.reading) {
+    const id = ctx.pending.reading;
+    ctx.pending.reading = null;
+    const item = ctx.data.contentById.get(id);
+    if (item && begin([{ item }], '阅读')) return root;
   }
 
   paint();

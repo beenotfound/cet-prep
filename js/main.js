@@ -42,11 +42,15 @@ async function boot() {
 
   let data;
   try {
-    const wordsData = await loadJSON('./data/words.json', { gzip: true });
+    const [wordsData, readingStats] = await Promise.all([
+      loadJSON('./data/words.json', { gzip: true }),
+      loadJSON('./data/reading-stats.json', { gzip: true }),
+    ]);
     data = {
       words: wordsData.words,
       wordsMeta: wordsData.meta,
       byWord: new Map(wordsData.words.map((w) => [w.w, w])),
+      readingStats,
       details: new Map(),
       detailsReady: false,
       questionsVocab: { items: [] },
@@ -66,6 +70,8 @@ async function boot() {
   const ctx = {
     data,
     toast,
+    /** one-shot hand-off between views (e.g. "read this passage") */
+    pending: {},
     ensureDetails() {
       if (data.detailsReady) return Promise.resolve();
       if (detailsPromise) return detailsPromise;

@@ -4,6 +4,7 @@ import { h } from '../core/dom.js';
 import { button, card, progress, tag, sticker } from '../ui/components.js';
 import { icon } from '../ui/icons.js';
 import { buildQueue, estimateKnown } from '../domain/engine.js';
+import { coverageOf, coveragePlan, recommendPassages } from '../domain/coverage.js';
 import { createStudySession } from './study.js';
 import { daysUntil, weekday } from '../core/format.js';
 
@@ -54,6 +55,13 @@ export function render(ctx) {
   const days = daysUntil(state.profile.examDate);
   const known = estimateKnown(ctx.data.words, state.theta, state.profile.level);
   const mastered = Object.values(state.words).filter((w) => w.k).length;
+
+  const corpus = ctx.data.readingStats?.corpus;
+  const coverage = corpus ? coverageOf(corpus, ctx.data.byWord, state.theta, state) : null;
+  const plan = corpus ? coveragePlan(corpus, ctx.data.byWord, state.theta, state, { step: 0.05 }) : null;
+  const readingPick = ctx.data.readingStats
+    ? recommendPassages(ctx.data.readingStats.passages, ctx.data.byWord, state.theta, state, { level: state.profile.level })[0]
+    : null;
 
   function start(words, label) {
     if (!words.length) { ctx.toast('这一组是空的，换个模式试试'); return; }
@@ -110,6 +118,26 @@ export function render(ctx) {
           ),
         ),
 
+    readingPick ? card({
+      variant: 'blue',
+      tape: true,
+      children: h('div', { class: 'stack' },
+        h('div', { class: 'row row--between' },
+          h('div', { class: 'bold' }, '今天读哪篇'),
+          tag('刚好难一点', 'violet'),
+        ),
+        h('div', { class: 'bold small', style: { 'margin-top': '6px' } }, readingPick.passage.title),
+        h('div', { class: 'xs muted' },
+          `生词率 ${((1 - readingPick.ratio) * 100).toFixed(1)}% · 还差 ${readingPick.unknownWords} 个词就全认识`),
+        h('div', { style: { 'margin-top': '10px' } },
+          button({
+            label: '开始读这篇', variant: 'primary', block: true,
+            onClick: () => { ctx.pending.reading = readingPick.passage.id; ctx.go('#/exam'); },
+          }),
+        ),
+      ),
+    }) : null,
+
     card({
       children: h('div', { class: 'stack' },
         h('div', { class: 'row row--between' },
@@ -118,6 +146,12 @@ export function render(ctx) {
         ),
         h('div', { class: 'c-kv' }, h('span', { class: 'muted' }, '预计已掌握'), h('span', { class: 'bold' }, `${known.known} / ${known.total}`)),
         progress(known.known / Math.max(known.total, 1)),
+        coverage ? h('div', { class: 'c-kv' },
+          h('span', { class: 'muted' }, '阅读覆盖率'),
+          h('span', { class: 'bold' }, `${Math.round(coverage.ratio * 100)}%`)) : null,
+        coverage && coverage.ratio < 0.9 && plan && plan.need > 0
+          ? h('div', { class: 'xs faint' }, `再学 ${plan.need} 个高频词可到 ${Math.floor(plan.goal * 100)}%`)
+          : null,
         h('div', { class: 'c-kv' }, h('span', { class: 'muted' }, '手动标记已会'), h('span', { class: 'bold' }, `${mastered}`)),
         h('div', { class: 'c-kv' }, h('span', { class: 'muted' }, '今日新词 / 复习'), h('span', { class: 'bold' }, `${today.new} / ${today.review}`)),
       ),
