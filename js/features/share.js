@@ -8,6 +8,20 @@ export function shareUrl() {
     : `${location.origin}${location.pathname}`;
 }
 
+/** WeChat / QQ in-app browsers block the Web Share API and most downloads. */
+export function isInAppBrowser() {
+  return /MicroMessenger|QQ\/|Weibo/i.test(navigator.userAgent);
+}
+
+export function dataUrlToBlob(dataUrl) {
+  const [head, b64] = String(dataUrl).split(',');
+  const mime = (head.match(/:(.*?);/) || [, 'image/png'])[1];
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+
 const INK = '#1E1E1E';
 const PAPER = '#FFF8E7';
 const PAPER_CARD = '#FFFDF6';
@@ -125,8 +139,7 @@ export function buildCard(stats) {
     label(g, cell.value, x + 230, y + 112, 62);
   });
 
-  label(g, '先测后学 · 只学不会的', W / 2, 1244, 34, INK, 800);
-  label(g, shareUrl().replace(/^https?:\/\//, ''), W / 2, 1300, 26, '#8B8479', 600);
+  label(g, shareUrl().replace(/^https?:\/\//, ''), W / 2, 1250, 30, '#8B8479', 600);
   return canvas;
 }
 
@@ -141,42 +154,36 @@ function download(blob, name) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function blobOf(canvas) {
-  return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+export function saveBlob(blob, name = '四六级剪贴本.png') {
+  download(blob, name);
+  return 'saved';
+}
+
+/**
+ * Call this directly from a click handler: on iOS the share sheet must be opened
+ * synchronously, before any await, or the user activation is gone.
+ */
+export async function shareFile(file) {
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: '四六级剪贴本', text: '我的学习画像' });
+      return 'shared';
+    } catch (error) {
+      if (error?.name === 'AbortError') return 'cancelled';
+    }
+  }
+  download(file, '四六级剪贴本.png');
+  return 'downloaded';
 }
 
 export async function saveCard(stats) {
-  const blob = await blobOf(buildCard(stats));
+  const blob = await new Promise((resolve) => buildCard(stats).toBlob(resolve, 'image/png'));
   download(blob, '四六级剪贴本.png');
   return 'saved';
 }
 
-export async function shareCard(stats) {
-  const blob = await blobOf(buildCard(stats));
-  const file = new File([blob], 'cet-card.png', { type: 'image/png' });
-  let canShareFiles = false;
-  try {
-    canShareFiles = Boolean(navigator.canShare && navigator.canShare({ files: [file] }));
-  } catch {
-    canShareFiles = false;
-  }
-  if (canShareFiles) {
-    try {
-      await Promise.race([
-        navigator.share({ files: [file], title: '四六级剪贴本', text: '我的学习画像' }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('share timeout')), 4000)),
-      ]);
-      return 'shared';
-    } catch (error) {
-      if (error?.name === 'AbortError') return 'cancelled';
-      // fall through to a plain download when the share sheet is unavailable
-    }
-  }
-  download(blob, '四六级剪贴本.png');
-  return 'downloaded';
-}
-
 export async function shareApp() {
+  if (isInAppBrowser()) return 'inapp';
   const url = shareUrl();
   const text = '先测后学，只学你还没掌握的四六级词汇';
   if (navigator.share) {

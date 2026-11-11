@@ -7,7 +7,7 @@ import * as openai from '../features/providers/openai.js';
 import * as claude from '../features/providers/claude.js';
 import { estimateKnown } from '../domain/engine.js';
 import { coverageOf } from '../domain/coverage.js';
-import { buildCard, shareCard, saveCard, shareApp } from '../features/share.js';
+import { buildCard, dataUrlToBlob, isInAppBrowser, shareFile, saveBlob, shareApp } from '../features/share.js';
 import { parseImport } from '../domain/importer.js';
 import { daysUntil } from '../core/format.js';
 
@@ -43,39 +43,56 @@ export function render(ctx) {
 
   function shareCardView() {
     const stats = shareStats();
-    let preview;
+    let dataUrl = '';
+    let file = null;
     try {
-      preview = h('img', { class: 'v-me__preview', alt: '学习画像', src: buildCard(stats).toDataURL('image/png') });
+      const canvas = buildCard(stats);
+      dataUrl = canvas.toDataURL('image/png');
+      file = new File([dataUrlToBlob(dataUrl)], 'cet-card.png', { type: 'image/png' });
     } catch (error) {
-      preview = h('div', { class: 'c-panel small' }, '卡片生成失败');
+      console.warn('share card failed', error);
     }
+
+    const inAppHint = () => showSheet({
+      title: '在浏览器中打开',
+      body: h('p', { class: 'small muted' }, '微信 / QQ 内置浏览器不支持直接分享。点右上角「···」，选「在浏览器中打开」后再分享。'),
+      actions: [{ label: '知道了' }],
+    });
+
     return card({
       children: h('div', { class: 'stack' },
         h('div', { class: 'bold' }, '分享'),
-        h('p', { class: 'xs muted' }, '生成一张学习画像，发给朋友。'),
-        h('div', { class: 'center' }, preview),
+        file
+          ? h('div', { class: 'center' }, h('img', { class: 'v-me__preview', alt: '学习画像', src: dataUrl }))
+          : h('div', { class: 'c-panel small' }, '卡片生成失败'),
         h('div', { class: 'row row--wrap' },
           button({
             label: '分享卡片', variant: 'primary', size: 'sm',
-            onClick: async () => {
-              try {
-                const result = await shareCard(stats);
+            onClick: () => {
+              if (!file) return;
+              if (isInAppBrowser()) { inAppHint(); return; }
+              shareFile(file).then((result) => {
                 if (result === 'downloaded') toast('图片已保存，可手动分享', 'ok');
-              } catch (error) {
+              }).catch((error) => {
                 if (error?.name !== 'AbortError') toast('分享失败', 'error');
-              }
+              });
             },
           }),
           button({
             label: '保存图片', size: 'sm',
-            onClick: async () => { await saveCard(stats); toast('已保存', 'ok'); },
+            onClick: () => {
+              if (!file) return;
+              saveBlob(file);
+              toast('已保存', 'ok');
+            },
           }),
         ),
         button({
           label: '分享这个工具', variant: 'ghost', block: true, size: 'sm',
           onClick: async () => {
             const result = await shareApp();
-            if (result === 'copied') toast('链接已复制', 'ok');
+            if (result === 'inapp') inAppHint();
+            else if (result === 'copied') toast('链接已复制', 'ok');
           },
         }),
       ),
