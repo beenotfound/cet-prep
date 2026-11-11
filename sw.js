@@ -1,5 +1,5 @@
 /* sw.js — offline shell for 四六级剪贴本. Bump VERSION on every deploy. */
-const VERSION = 'cet-collage-06b39f284f';
+const VERSION = 'cet-collage-d562cfd965';
 const CACHE = VERSION;
 
 const SHELL = [
@@ -30,10 +30,10 @@ const SHELL = [
   './js/features/ai.js',
   './js/features/providers/openai.js',
   './js/features/providers/claude.js',
-  './data/words.json',
-  './data/questions-vocab.json',
-  './data/content.json',
-  './data/papers.json',
+  './data/words.json.gz',
+  './data/questions-vocab.json.gz',
+  './data/content.json.gz',
+  './data/papers.json.gz',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',

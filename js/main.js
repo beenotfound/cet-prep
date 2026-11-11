@@ -25,10 +25,10 @@ function syncNav() {
 
 async function loadData() {
   const [wordsData, vocab, content, papers] = await Promise.all([
-    loadJSON('./data/words.json'),
-    loadJSON('./data/questions-vocab.json'),
-    loadJSON('./data/content.json'),
-    loadJSON('./data/papers.json'),
+    loadJSON('./data/words.json', { gzip: true }),
+    loadJSON('./data/questions-vocab.json', { gzip: true }),
+    loadJSON('./data/content.json', { gzip: true }),
+    loadJSON('./data/papers.json', { gzip: true }),
   ]);
   return {
     words: wordsData.words,
