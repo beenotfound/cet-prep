@@ -1,6 +1,19 @@
 /* core/store.js — the only module that touches localStorage. */
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
+
+/** Repair states written by the old study loop, which inflated theta. */
+function migrate(state) {
+  if (!state.v || state.v < 2) {
+    if (typeof state.theta === 'number' && state.theta > 8.8) {
+      state.theta = 5.2;
+      state.calib = { at: null, se: null, items: 0, spot: null };
+      if (state.profile) state.profile.onboarded = false;
+    }
+    state.v = SCHEMA_VERSION;
+  }
+  return state;
+}
 
 export function defaultExamDate(now = new Date()) {
   // CET exams are held around the third Saturday of December.
@@ -49,12 +62,17 @@ export function createStore({ key = 'cetcollage.v1', onError } = {}) {
   const listeners = new Set();
   let saveTimer = null;
   let dirty = false;
+  let needsSave = false;
 
   try {
     const raw = localStorage.getItem(key);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === 'object') state = fillDefaults(parsed, defaults());
+      if (parsed && typeof parsed === 'object') {
+        const previousVersion = parsed.v;
+        state = migrate(fillDefaults(parsed, defaults()));
+        needsSave = previousVersion !== state.v;
+      }
     }
   } catch (error) {
     try { localStorage.setItem(`${key}.bak`, localStorage.getItem(key) || ''); } catch { /* ignore */ }
@@ -82,6 +100,11 @@ export function createStore({ key = 'cetcollage.v1', onError } = {}) {
   function flush() {
     if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
     persist();
+  }
+
+  if (needsSave) {
+    dirty = true;
+    persist();   // write the migrated state back immediately
   }
 
   if (typeof window !== 'undefined') {

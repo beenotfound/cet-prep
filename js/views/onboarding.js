@@ -78,7 +78,7 @@ export function render(ctx) {
   }
 
   function startQuiz() {
-    cal = new Calibrator(eligible(), state.profile.level, { theta: state.theta });
+    cal = new Calibrator(eligible(), state.profile.level, { theta: 5.2 });
     step = 'quiz';
     next();
   }

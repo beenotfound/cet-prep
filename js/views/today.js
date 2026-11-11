@@ -55,6 +55,7 @@ export function render(ctx) {
   const days = daysUntil(state.profile.examDate);
   const known = estimateKnown(ctx.data.words, state.theta, state.profile.level);
   const mastered = Object.values(state.words).filter((w) => w.k).length;
+  const reviewing = Object.values(state.words).filter((w) => (w.reps || 0) > 0).length;
 
   const corpus = ctx.data.readingStats?.corpus;
   const coverage = corpus ? coverageOf(corpus, ctx.data.byWord, state.theta, state) : null;
@@ -148,6 +149,7 @@ export function render(ctx) {
         coverage && coverage.ratio < 0.9 && plan && plan.need > 0
           ? h('div', { class: 'xs faint' }, `再学 ${plan.need} 个高频词可到 ${Math.floor(plan.goal * 100)}%`)
           : null,
+        h('div', { class: 'c-kv' }, h('span', { class: 'muted' }, '已进入复习'), h('span', { class: 'bold' }, `${reviewing}`)),
         h('div', { class: 'c-kv' }, h('span', { class: 'muted' }, '手动标记已会'), h('span', { class: 'bold' }, `${mastered}`)),
         h('div', { class: 'c-kv' }, h('span', { class: 'muted' }, '今日新词 / 复习'), h('span', { class: 'bold' }, `${today.new} / ${today.review}`)),
       ),

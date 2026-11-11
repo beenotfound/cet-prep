@@ -45,12 +45,13 @@ export function createActions({ store, data }) {
       commit();
     },
 
-    /** Study card self-assessment: grade 0..3. */
+    /** Study card self-assessment: grade 0..3. Only this word's state moves —
+     *  the global theta is a calibration-time estimate, not a per-card reward. */
     gradeWord(word, grade) {
       const s = state();
       const first = !s.words[word.w];
-      E.applyGrade(s, word, grade);
-      s.theta = E.recordAnswer({ state: s, theta: s.theta, k: 0.5 }, word, grade >= 2);
+      const st = E.applyGrade(s, word, grade);
+      st.o = E.clamp((st.o || 0) + (grade === 0 ? 0.35 : grade === 1 ? 0.12 : -0.08), -3, 3);
       E.bumpDay(s, first ? 'new' : 'review');
       E.bumpDay(s, 'total');
       if (grade >= 2) E.bumpDay(s, 'correct');
