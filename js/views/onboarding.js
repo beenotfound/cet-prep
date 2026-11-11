@@ -178,7 +178,7 @@ export function render(ctx) {
     const item = spot[spotIndex];
     return h('div', { class: 'stack stack--lg' },
       h('div', { class: 'row row--between' },
-        tag(`抽检 ${spotIndex + 1} / ${spot.length}`, 'blue'),
+        tag(`复核 ${spotIndex + 1} / ${spot.length}`, 'blue'),
         h('span', { class: 'xs muted' }, item.expect === 'known' ? '我们猜你认识' : '我们猜你不认识'),
       ),
       progress(spotIndex / spot.length),
@@ -223,11 +223,11 @@ export function render(ctx) {
       state.calib.spot ? card({
         variant: 'blue',
         children: h('div', { class: 'small' },
-          `抽检结果：猜你会 ${state.calib.spot.knownHits}/${state.calib.spot.knownN} 命中，猜你不会 ${state.calib.spot.unknownN - state.calib.spot.unknownHits}/${state.calib.spot.unknownN} 命中。`),
+          `复核结果：猜你会 ${state.calib.spot.knownHits}/${state.calib.spot.knownN} 命中，猜你不会 ${state.calib.spot.unknownN - state.calib.spot.unknownHits}/${state.calib.spot.unknownN} 命中。`),
       }) : null,
       h('div', { class: 'stack' },
         button({ label: '开始今天的词', variant: 'primary', size: 'lg', block: true, onClick: () => ctx.go('#/today') }),
-        button({ label: '抽检 10 个词', variant: 'ghost', block: true, onClick: startSpot }),
+        button({ label: '复核 10 个词，校准更准', variant: 'ghost', block: true, onClick: startSpot }),
         button({ label: '重新测一次', variant: 'ghost', block: true, onClick: () => { step = 'intro'; paint(); } }),
       ),
     );
