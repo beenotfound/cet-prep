@@ -2,6 +2,7 @@
 
 import { h } from '../core/dom.js';
 import { button, card, progress, tag, sticker } from '../ui/components.js';
+import { icon } from '../ui/icons.js';
 import { buildQueue, estimateKnown } from '../domain/engine.js';
 import { createStudySession } from './study.js';
 import { daysUntil, weekday } from '../core/format.js';
@@ -93,7 +94,7 @@ export function render(ctx) {
       ? card({
           variant: 'mint', tape: true,
           children: h('div', { class: 'stack center' },
-            h('div', { style: { 'font-size': '40px' } }, '☕'),
+            h('div', { class: 'v-today__illust' }, icon('cup', 'c-icon--xl')),
             h('div', { class: 'bold' }, '今天没有要复习的词'),
             h('div', { class: 'small muted' }, '可以去题库练练阅读和翻译'),
           ),
@@ -124,9 +125,9 @@ export function render(ctx) {
     }),
 
     h('div', { class: 'row row--wrap' },
-      button({ label: '📚 单词库', onClick: () => ctx.go('#/words') }),
-      button({ label: '📝 题库', onClick: () => ctx.go('#/exam') }),
-      button({ label: '🎯 重新校准', onClick: () => ctx.go('#/onboarding') }),
+      button({ label: '单词库', icon: icon('words'), onClick: () => ctx.go('#/words') }),
+      button({ label: '题库', icon: icon('exam'), onClick: () => ctx.go('#/exam') }),
+      button({ label: '重新校准', icon: icon('target'), onClick: () => ctx.go('#/onboarding') }),
     ),
   );
 

@@ -41,6 +41,38 @@
   <link rel="stylesheet" href="./css/views.css">
 </head>
 <body>
+  <!-- inline icon sprite: hand-drawn line icons, no external library -->
+  <svg class="c-sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-today" viewBox="0 0 24 24">
+      <path d="M4.1 7.3c0-1.2 1-2.1 2.2-2.1h11.4c1.2 0 2.2.9 2.2 2.1v11.3c0 1.2-1 2.1-2.2 2.1H6.3c-1.2 0-2.2-.9-2.2-2.1z"/>
+      <path d="M8.3 3.2v3.6M15.7 3.2v3.6"/>
+      <path d="M8.4 13.1l2.4 2.4 4.8-5.1"/>
+    </symbol>
+    <symbol id="i-words" viewBox="0 0 24 24">
+      <path d="M4.2 6.5c0-1.3 1-2.3 2.3-2.3h11c1.3 0 2.3 1 2.3 2.3v11c0 1.3-1 2.3-2.3 2.3h-11c-1.3 0-2.3-1-2.3-2.3z"/>
+      <path d="M9.1 16.3l2.9-8.1 2.9 8.1M10.2 13.4h3.6"/>
+    </symbol>
+    <symbol id="i-exam" viewBox="0 0 24 24">
+      <path d="M6.3 3.7h8.2l3.8 3.9v12.7H6.3z"/>
+      <path d="M14.3 3.9v4.2h4.1"/>
+      <path d="M9.3 11.3h5.5M9.3 14.3h5.5M9.3 17.3h3.3"/>
+    </symbol>
+    <symbol id="i-me" viewBox="0 0 24 24">
+      <circle cx="12" cy="8.4" r="3.5"/>
+      <path d="M4.9 20.2c1.1-3.5 3.8-5.3 7.1-5.3s6 1.8 7.1 5.3"/>
+    </symbol>
+    <symbol id="i-cup" viewBox="0 0 24 24">
+      <path d="M5.2 8.3h10.6v5.9c0 2.6-2 4.6-4.6 4.6h-1.4c-2.6 0-4.6-2-4.6-4.6z"/>
+      <path d="M15.9 9.5h1.5c1.6 0 2.8 1.2 2.8 2.7s-1.2 2.7-2.8 2.7h-1.5"/>
+      <path d="M8.1 4.9c0 .9.6 1.2.6 2.1M11.4 4.9c0 .9.6 1.2.6 2.1"/>
+    </symbol>
+    <symbol id="i-target" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="7.4"/>
+      <circle cx="12" cy="12" r="3.1"/>
+      <path d="M12 2.8v2.9M12 18.3v2.9M2.8 12h2.9M18.3 12h2.9"/>
+    </symbol>
+  </svg>
+
   <div id="app">
     <div class="c-panel" style="margin:24px auto;max-width:420px">正在加载词库…</div>
     <noscript><div class="c-panel">需要开启 JavaScript 才能使用。</div></noscript>
@@ -49,16 +81,16 @@
   <nav class="c-nav" id="nav" aria-label="主导航">
     <div class="c-nav__brand" aria-hidden="true">CET</div>
     <button type="button" class="c-nav__item" data-tab="today">
-      <span class="c-nav__icon" aria-hidden="true">📚</span><span>今日</span>
+      <span class="c-nav__icon" aria-hidden="true"><svg class="c-icon"><use href="#i-today"></use></svg></span><span>今日</span>
     </button>
     <button type="button" class="c-nav__item" data-tab="words">
-      <span class="c-nav__icon" aria-hidden="true">🔤</span><span>单词</span>
+      <span class="c-nav__icon" aria-hidden="true"><svg class="c-icon"><use href="#i-words"></use></svg></span><span>单词</span>
     </button>
     <button type="button" class="c-nav__item" data-tab="exam">
-      <span class="c-nav__icon" aria-hidden="true">📝</span><span>题库</span>
+      <span class="c-nav__icon" aria-hidden="true"><svg class="c-icon"><use href="#i-exam"></use></svg></span><span>题库</span>
     </button>
     <button type="button" class="c-nav__item" data-tab="me">
-      <span class="c-nav__icon" aria-hidden="true">🙋</span><span>我的</span>
+      <span class="c-nav__icon" aria-hidden="true"><svg class="c-icon"><use href="#i-me"></use></svg></span><span>我的</span>
     </button>
   </nav>
 

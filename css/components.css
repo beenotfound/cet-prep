@@ -1,5 +1,24 @@
 /* css/components.css — reusable .c-* pieces. */
 
+/* ---------- icons ---------- */
+.c-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+.c-icon {
+  display: block;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.c-icon--xl { width: 46px; height: 46px; stroke-width: 1.7; }
+
 /* ---------- card: hand-cut paper ---------- */
 .c-card {
   position: relative;
@@ -66,6 +85,7 @@
 .c-btn--block { display: flex; width: 100%; }
 .c-btn--lg { min-height: 54px; font-size: var(--fs-md); padding: 0 var(--s5); }
 .c-btn--sm { min-height: 36px; padding: 0 var(--s3); font-size: var(--fs-xs); }
+.c-btn .c-icon { width: 18px; height: 18px; stroke-width: 2.4; }
 .c-btn[disabled],
 .c-btn.is-disabled { opacity: 0.45; pointer-events: none; }
 
@@ -156,7 +176,7 @@
   padding: 6px 0 4px;
   border: none;
   background: none;
-  color: var(--ink-faint);
+  color: var(--ink-soft);
   font-size: 11px;
   font-weight: 900;
 }
@@ -169,6 +189,7 @@
   font-size: 19px;
   border: 2px solid transparent;
 }
+.c-nav__icon .c-icon { width: 24px; height: 24px; }
 .c-nav__item.is-active { color: var(--ink); }
 .c-nav__item.is-active .c-nav__icon {
   background: var(--yellow);
@@ -334,6 +355,7 @@
     background: transparent;
     font-size: 22px;
   }
+  .c-nav__icon .c-icon { width: 26px; height: 26px; }
   .c-nav__item.is-active .c-nav__icon {
     background: transparent;
     border-color: transparent;
