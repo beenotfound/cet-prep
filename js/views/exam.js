@@ -3,6 +3,7 @@
 import { h } from '../core/dom.js';
 import { button, card, tag, progress, toast, showSheet, statePanel, chips } from '../ui/components.js';
 import { renderItem, feedbackView } from './exam-items.js';
+import { writingReview } from '../features/writing-review.js';
 import { gradeItem, formatClock } from '../domain/exam.js';
 import { gradeTranslation, gradeWriting, reportAIError } from '../features/ai.js';
 
@@ -254,10 +255,11 @@ function build(ctx, root) {
         clockEl,
       ),
       progress(idx / queue.length),
+      answered && item.type === 'writing' ? writingReview(ctx, item, entry.response) : null,
       card({ tape: true, children: answered && !instant ? feedbackView(item, entry.result) : runner.el }),
       answered
         ? h('div', { class: 'stack' },
-            (item.type === 'translation' || item.type === 'writing') ? aiGradeButton(item, entry.response) : null,
+            item.type === 'translation' ? aiGradeButton(item, entry.response) : null,
             button({ label: idx + 1 >= queue.length ? '查看结果' : '下一题', variant: 'primary', block: true, onClick: next }),
           )
         : instant
@@ -265,7 +267,7 @@ function build(ctx, root) {
           : h('div', { class: 'stack' },
               button({ label: '提交答案', variant: 'primary', size: 'lg', block: true, onClick: submit }),
               (item.type === 'translation' || item.type === 'writing')
-                ? h('div', { class: 'xs faint center' }, '主观题不自动判分，提交后可看范文')
+                ? h('div', { class: 'xs faint center' }, item.type === 'writing' ? '提交后看本地评分和范文' : '主观题不自动判分，提交后可看范文')
                 : null,
             ),
     );

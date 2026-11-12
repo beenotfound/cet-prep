@@ -93,7 +93,7 @@ export function buildCard(stats) {
   g.fillRect(-130, -26, 260, 52);
   g.restore();
 
-  label(g, '四六级剪贴本', W / 2, 148, 66);
+  label(g, 'supersuper四六级', W / 2, 148, 66);
   label(g, '我的学习画像', W / 2, 212, 30, '#55504A', 700);
 
   // main number card
@@ -154,7 +154,7 @@ function download(blob, name) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function saveBlob(blob, name = '四六级剪贴本.png') {
+export function saveBlob(blob, name = 'supersuper四六级.png') {
   download(blob, name);
   return 'saved';
 }
@@ -175,19 +175,19 @@ export function prefersSystemShare() {
 export async function shareFile(file) {
   if (prefersSystemShare() && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: '四六级剪贴本', text: '我的学习画像' });
+      await navigator.share({ files: [file], title: 'supersuper四六级', text: '我的学习画像' });
       return 'shared';
     } catch (error) {
       if (error?.name === 'AbortError') return 'cancelled';
     }
   }
-  download(file, '四六级剪贴本.png');
+  download(file, 'supersuper四六级.png');
   return 'downloaded';
 }
 
 export async function saveCard(stats) {
   const blob = await new Promise((resolve) => buildCard(stats).toBlob(resolve, 'image/png'));
-  download(blob, '四六级剪贴本.png');
+  download(blob, 'supersuper四六级.png');
   return 'saved';
 }
 
@@ -197,7 +197,7 @@ export async function shareApp() {
   const text = '先测后学，只学你还没掌握的四六级词汇';
   if (prefersSystemShare()) {
     try {
-      await navigator.share({ title: '四六级剪贴本', text, url });
+      await navigator.share({ title: 'supersuper四六级', text, url });
       return 'shared';
     } catch (error) {
       if (error?.name === 'AbortError') return 'cancelled';

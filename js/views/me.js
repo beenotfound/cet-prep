@@ -331,6 +331,20 @@ export function render(ctx) {
     ctx.go('#/onboarding');
   }
 
+  async function forceRefresh() {
+    try {
+      const regs = (await navigator.serviceWorker?.getRegistrations?.()) || [];
+      await Promise.all(regs.map((reg) => reg.unregister()));
+    } catch { /* ignore */ }
+    try {
+      if (window.caches) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((key) => caches.delete(key)));
+      }
+    } catch { /* ignore */ }
+    location.reload();
+  }
+
   function aboutCard() {
     return card({
       variant: 'blue',
@@ -339,13 +353,19 @@ export function render(ctx) {
         h('div', { class: 'xs muted' },
           '词库数据来自 KyleBing/english-vocabulary（BSD-3-Clause），难度由 hermitdave/FrequencyWords（MIT）词频估算。',
           h('br'),
-          '阅读覆盖率按站内 32 篇阅读语料的词频加权估算。',
+          '阅读覆盖率按站内阅读语料的词频加权估算。',
           h('br'),
           '题目为原创、程序生成，或来自公开整理仓库（cypher-yht、Drhm1224、123xzw999）；部分真题文本仅供非商用学习。',
           h('br'),
+          '文学角使用 Project Gutenberg / Wikisource 的公版文本（作者去世 50 年以上）。',
+          h('br'),
           '听力模块未内置（原音频需配套真题文本，版权受限）。',
         ),
-        h('div', { class: 'xs faint', style: { 'margin-top': '6px' } }, '四六级剪贴本 · v1'),
+        h('div', { class: 'row', style: { 'margin-top': '8px' } },
+          button({ label: '刷新到最新版本', size: 'sm', onClick: forceRefresh }),
+        ),
+        h('div', { class: 'xs faint' }, '看不到新题时点一下。'),
+        h('div', { class: 'xs faint', style: { 'margin-top': '6px' } }, 'supersuper四六级 · v1'),
       ),
     });
   }

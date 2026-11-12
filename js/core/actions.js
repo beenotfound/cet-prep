@@ -45,6 +45,31 @@ export function createActions({ store, data }) {
       commit();
     },
 
+    markRead(id) {
+      const s = state();
+      const key = String(id || '');
+      if (!key || s.read.includes(key)) return;
+      s.read = [...s.read, key];
+      commit();
+    },
+
+    unmarkRead(id) {
+      const s = state();
+      const key = String(id || '');
+      if (!key || !s.read.includes(key)) return;
+      s.read = s.read.filter((x) => x !== key);
+      commit();
+    },
+
+    toggleRead(id) {
+      const s = state();
+      const key = String(id || '');
+      if (!key) return;
+      if (s.read.includes(key)) s.read = s.read.filter((x) => x !== key);
+      else s.read = [...s.read, key];
+      commit();
+    },
+
     /** Study card self-assessment: grade 0..3. Only this word's state moves —
      *  the global theta is a calibration-time estimate, not a per-card reward. */
     gradeWord(word, grade) {

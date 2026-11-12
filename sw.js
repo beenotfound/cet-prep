@@ -1,5 +1,5 @@
-/* sw.js — offline shell for 四六级剪贴本. Bump VERSION on every deploy. */
-const VERSION = 'cet-collage-f1d1d6abd0';
+/* sw.js — offline shell for supersuper四六级. Bump VERSION on every deploy. */
+const VERSION = 'cet-collage-6ed722bf79';
 const CACHE = VERSION;
 
 const SHELL = [
@@ -20,6 +20,7 @@ const SHELL = [
   './js/domain/exam.js',
   './js/domain/importer.js',
   './js/domain/coverage.js',
+  './js/domain/writing-score.js',
   './js/ui/components.js',
   './js/ui/icons.js',
   './js/views/today.js',
@@ -27,10 +28,12 @@ const SHELL = [
   './js/views/study.js',
   './js/views/exam.js',
   './js/views/exam-items.js',
+  './js/views/library.js',
   './js/views/me.js',
   './js/views/onboarding.js',
   './js/features/ai.js',
   './js/features/share.js',
+  './js/features/writing-review.js',
   './js/features/providers/openai.js',
   './js/features/providers/claude.js',
   './data/words.json.gz',

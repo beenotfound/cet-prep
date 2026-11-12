@@ -8,12 +8,13 @@ import { statePanel, toast } from './ui/components.js';
 import * as today from './views/today.js';
 import * as words from './views/words.js';
 import * as exam from './views/exam.js';
+import * as library from './views/library.js';
 import * as me from './views/me.js';
 import * as onboarding from './views/onboarding.js';
 
 const mount = document.getElementById('app');
 
-const TAB_OF = { today: 'today', words: 'words', word: 'words', exam: 'exam', me: 'me', onboarding: 'today' };
+const TAB_OF = { today: 'today', words: 'words', word: 'words', exam: 'exam', library: 'library', me: 'me', onboarding: 'today' };
 
 function syncNav() {
   const first = (location.hash || '#/today').replace(/^#\/?/, '').split('/')[0] || 'today';
@@ -66,6 +67,7 @@ async function boot() {
 
   let detailsPromise = null;
   let examPromise = null;
+  let storiesPromise = null;
 
   const ctx = {
     data,
@@ -99,6 +101,14 @@ async function boot() {
       }).catch((error) => { examPromise = null; throw error; });
       return examPromise;
     },
+    ensureStories() {
+      if (data.stories) return Promise.resolve();
+      if (storiesPromise) return storiesPromise;
+      storiesPromise = loadJSON('./data/stories.json', { gzip: true })
+        .then((payload) => { data.stories = payload; })
+        .catch((error) => { storiesPromise = null; throw error; });
+      return storiesPromise;
+    },
   };
 
   const store = createStore({ onError: (message) => toast(message, 'error') });
@@ -110,6 +120,7 @@ async function boot() {
     today,
     words,
     exam,
+    library,
     me,
     onboarding,
     'word/:w': { render: (c, params) => words.renderWord(c, params) },
@@ -129,7 +140,13 @@ async function boot() {
   router.start();
 
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-    navigator.serviceWorker.register('./sw.js').catch(() => { /* offline caching is optional */ });
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+      .then((reg) => {
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') reg.update().catch(() => {});
+        });
+      })
+      .catch(() => { /* offline caching is optional */ });
   }
 
   // background prefetch: examples only; the exam bundle loads when 题库 is opened

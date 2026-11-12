@@ -35,18 +35,15 @@ export function render(ctx) {
     return h('div', { class: 'stack stack--lg' },
       h('header', { class: 'v-today__hero' },
         h('div', { class: 'c-tape' }),
-        h('h1', { class: 'page-title' }, '先花 3 分钟，', h('br'), h('span', { class: 'marked' }, '认清自己')),
-        h('p', { class: 'muted small', style: { 'margin-top': '8px' } },
-          '已经会的词，不再出现在队列里。'),
+        h('h1', { class: 'page-title' }, '首先', h('br'), '我们需要了解你的', h('span', { class: 'marked' }, '词汇量')),
       ),
       card({
         variant: 'yellow', tape: true,
         children: h('div', { class: 'stack' },
-          h('div', { class: 'bold' }, '不用从 abandon 开始'),
-          h('div', { class: 'small muted' }, '已经会的不推给你，只学不会的。'),
+          h('div', { class: 'bold' }, '背单词拒绝从abandon开始'),
         ),
       }),
-      button({ label: '开始 3 分钟校准', variant: 'primary', size: 'lg', block: true, onClick: () => ctx.go('#/onboarding') }),
+      button({ label: '开始词汇量校准', variant: 'primary', size: 'lg', block: true, onClick: () => ctx.go('#/onboarding') }),
     );
   }
 
@@ -73,7 +70,7 @@ export function render(ctx) {
     h('header', { class: 'v-today__head' },
       h('div', { class: 'xs bold muted' }, `${weekday()} · ${new Date().toLocaleDateString('zh-CN')}`),
       h('h1', { class: 'page-title' },
-        '今天', h('span', { class: 'marked' }, '只学不会的'),
+        '今天', h('span', { class: 'marked' }, '学点什么'), '呢',
       ),
       days != null
         ? h('div', { class: 'row', style: { 'margin-top': '6px' } },

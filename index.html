@@ -3,13 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>四六级剪贴本</title>
+  <title>supersuper四六级</title>
   <meta name="description" content="先测后学：只学你还没掌握的四六级词汇，配原创题库与可选的 AI 辅导。">
+  <meta property="og:title" content="supersuper四六级">
+  <meta property="og:description" content="先测后学：只学你还没掌握的四六级词汇">
+  <meta property="og:type" content="website">
   <meta name="theme-color" content="#FFF8E7">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="四六级剪贴本">
+  <meta name="apple-mobile-web-app-title" content="supersuper四六级">
   <meta name="format-detection" content="telephone=no">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
@@ -33,12 +36,16 @@
   <link rel="modulepreload" href="./js/views/study.js">
   <link rel="modulepreload" href="./js/views/exam.js">
   <link rel="modulepreload" href="./js/views/exam-items.js">
+  <link rel="modulepreload" href="./js/views/library.js">
   <link rel="modulepreload" href="./js/views/me.js">
   <link rel="modulepreload" href="./js/views/onboarding.js">
   <link rel="stylesheet" href="./css/tokens.css">
   <link rel="stylesheet" href="./css/base.css">
   <link rel="stylesheet" href="./css/components.css">
   <link rel="stylesheet" href="./css/views.css">
+  <!-- Cloudflare Web Analytics -->
+  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "1ab65e55c0b7450e8938aae24d749d42"}'></script>
+  <!-- End Cloudflare Web Analytics -->
 </head>
 <body>
   <!-- inline icon sprite: hand-drawn line icons, no external library -->
@@ -56,6 +63,10 @@
       <path d="M6.3 3.7h8.2l3.8 3.9v12.7H6.3z"/>
       <path d="M14.3 3.9v4.2h4.1"/>
       <path d="M9.3 11.3h5.5M9.3 14.3h5.5M9.3 17.3h3.3"/>
+    </symbol>
+    <symbol id="i-library" viewBox="0 0 24 24">
+      <path d="M12 6.4c-1.8-1.4-4.2-2-6.6-1.6v12.8c2.4-.4 4.8.2 6.6 1.6 1.8-1.4 4.2-2 6.6-1.6V4.8c-2.4-.4-4.8.2-6.6 1.6z"/>
+      <path d="M12 6.4v12.8"/>
     </symbol>
     <symbol id="i-me" viewBox="0 0 24 24">
       <circle cx="12" cy="8.4" r="3.5"/>
@@ -85,6 +96,9 @@
     </button>
     <button type="button" class="c-nav__item" data-tab="words">
       <span class="c-nav__icon" aria-hidden="true"><svg class="c-icon"><use href="#i-words"></use></svg></span><span>单词</span>
+    </button>
+    <button type="button" class="c-nav__item" data-tab="library">
+      <span class="c-nav__icon" aria-hidden="true"><svg class="c-icon"><use href="#i-library"></use></svg></span><span>图书馆</span>
     </button>
     <button type="button" class="c-nav__item" data-tab="exam">
       <span class="c-nav__icon" aria-hidden="true"><svg class="c-icon"><use href="#i-exam"></use></svg></span><span>题库</span>

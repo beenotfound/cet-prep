@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "四六级剪贴本",
-  "short_name": "四六级",
+  "name": "supersuper四六级",
+  "short_name": "supersuper",
   "description": "先测后学：只学你还没掌握的四六级词汇，配原创题库与可选的 AI 辅导。",
   "lang": "zh-CN",
   "start_url": "./index.html",

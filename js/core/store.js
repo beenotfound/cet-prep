@@ -39,6 +39,7 @@ export function defaults() {
     stats: { days: {}, streak: 0, lastDay: null },
     wrong: {},
     fav: [],
+    read: [],
     papers: {},
     custom: [],
     ai: { provider: 'deepseek', baseUrl: '', key: '', model: '', sessionTokens: 0, budget: 0, remember: false },

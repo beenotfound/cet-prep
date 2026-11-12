@@ -46,9 +46,9 @@ export function render(ctx) {
     return h('div', { class: 'stack stack--lg' },
       h('header', { class: 'v-onboard__head' },
         h('div', { class: 'c-tape' }),
-        h('h1', { class: 'page-title' }, '先花 ', h('span', { class: 'marked' }, '3 分钟'), ' 认清自己'),
+        h('h1', { class: 'page-title' }, '首先', h('br'), '我们需要了解你的', h('span', { class: 'marked' }, '词汇量')),
         h('p', { class: 'muted small', style: { 'margin-top': '8px' } },
-          '只测你还没掌握的词。已经会的，不再推给你。'),
+          '只测你还没掌握的词。'),
       ),
       card({
         tape: true,
@@ -71,7 +71,7 @@ export function render(ctx) {
         ),
       }),
       h('div', { class: 'stack' },
-        button({ label: '开始 3 分钟校准', variant: 'primary', size: 'lg', block: true, onClick: startQuiz }),
+        button({ label: '开始词汇量校准', variant: 'primary', size: 'lg', block: true, onClick: startQuiz }),
         button({ label: '跳过，直接开始学', variant: 'ghost', block: true, onClick: skip }),
       ),
     );

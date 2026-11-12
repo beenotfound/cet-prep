@@ -241,8 +241,45 @@
   .v-exam__option.is-picked:hover { background: var(--yellow); }
 }
 
+/* ---------------- writing review ---------------- */
+.v-write__score {
+  font-size: 46px;
+  font-weight: 900;
+  line-height: 1.05;
+  font-family: var(--font-display);
+}
+.v-write__dim { display: flex; flex-direction: column; gap: 5px; }
+.v-write__bar {
+  height: 10px;
+  border: var(--edge-thin);
+  border-radius: var(--r-pill);
+  background: var(--paper-2);
+  overflow: hidden;
+}
+.v-write__bar > i { display: block; height: 100%; background: var(--yellow); }
+.v-write__issue { border-left: 4px solid var(--red); padding-left: 10px; }
+.v-write__fix { border-left: 4px solid var(--mint); padding-left: 10px; }
+
 /* ---------------- me ---------------- */
-.v-me .c-input { font-size: 15px; }
+.v-me .c-input { font-size: 16px; }
+
+/* iOS WebKit renders date inputs at their intrinsic width; force them into the card. */
+.v-me input[type="date"].c-input {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  text-align: left;
+}
+.v-me input[type="date"].c-input::-webkit-date-and-time-value { text-align: left; }
+
+@supports (-webkit-touch-callout: none) {
+  .v-me input[type="date"].c-input {
+    -webkit-appearance: none;
+    appearance: none;
+    width: -webkit-fill-available;
+  }
+}
 .v-me__preview {
   width: 100%;
   max-width: 300px;
@@ -263,4 +300,126 @@
   .v-today__hero { padding: var(--s6); }
   .v-exam__grid { grid-template-columns: repeat(3, 1fr); }
   .v-words__list { max-height: none; }
+}
+
+/* ================= library（图书馆：考试阅读 + 文学角 + 查词阅读器） ================= */
+
+.v-library__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+}
+.v-library__illust { flex: 0 0 auto; margin-top: 3px; }
+.v-library__headtext { gap: 2px; min-width: 0; }
+.v-library__headtext .page-title { margin-top: 2px; }
+.v-library__head .c-sticker { flex: 0 0 auto; margin-left: auto; }
+.v-library__stats { margin-top: 2px; }
+
+.v-library__levels { display: flex; align-items: center; gap: var(--s2); }
+.v-library__levels .c-chips { padding: 0 0 2px; }
+
+.v-library__sec { gap: var(--s3); }
+.v-library__sechead { gap: var(--s2); }
+.v-library__h2 {
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+/* 推荐卡：手切纸片，第一张最显眼 */
+.v-library__picks { display: grid; gap: var(--s3); }
+.v-library__pickbody { gap: 6px; }
+.v-library__picktitle { font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+.v-library__pick .c-btn { margin-top: var(--s2); }
+
+/* 全部阅读：一列清单，和单词表同一套纸片语言 */
+.v-library__list {
+  border: var(--edge-thin);
+  border-radius: var(--r-md);
+  background: var(--paper-2);
+  overflow: hidden;
+}
+.v-library__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: 10px var(--s3);
+  border-bottom: 1px dashed rgba(30, 30, 30, 0.14);
+}
+.v-library__row:last-child { border-bottom: none; }
+.v-library__row .c-btn { flex: 0 0 auto; }
+.v-library__rowmain { gap: 5px; }
+.v-library__rowmeta { gap: var(--s2); }
+.v-library__rowtitle {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+/* 文学角：卡片墙 */
+.v-library__stories { display: grid; gap: var(--s3); }
+.v-library__story .c-btn { margin-top: 2px; }
+.v-library__storytitle { font-size: 16px; line-height: 1.35; overflow-wrap: anywhere; }
+.v-library__summary { line-height: 1.5; }
+
+/* 阅读器 */
+.v-library__reader { max-width: 780px; margin: 0 auto; }
+.v-library__rhead { gap: 6px; }
+.v-library__rtitle { word-break: break-word; }
+.v-library__text {
+  font-size: 16px;
+  line-height: 1.95;
+  max-width: 68ch;
+}
+.v-library__p { margin-bottom: 14px; }
+.v-library__p:last-child { margin-bottom: 0; }
+.v-library__p--empty { color: var(--ink-faint); }
+.v-library__w {
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.1s ease;
+}
+.v-library__w:focus-visible {
+  background: var(--yellow);
+  outline: 2px dashed var(--blue-deep);
+  outline-offset: 1px;
+}
+.v-library__rfoot {
+  border-top: 1px dashed rgba(30, 30, 30, 0.14);
+  padding-top: var(--s4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+/* 查词卡 */
+.v-library__lookup { gap: var(--s2); }
+.v-library__lookupword {
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.4px;
+  word-break: break-word;
+}
+.v-library__ipa { font-size: 15px; color: var(--ink-soft); }
+.v-library__glosses { gap: 6px; }
+.v-library__gloss { display: flex; align-items: baseline; gap: var(--s2); }
+.v-library__glosscn { font-size: 16px; line-height: 1.5; }
+
+@media (hover: hover) {
+  .v-library__row:hover { background: var(--paper-3); }
+  .v-library__w:hover { background: var(--yellow); }
+}
+
+@media (min-width: 600px) {
+  .v-library__picks { grid-template-columns: repeat(2, 1fr); }
+  .v-library__stories { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 900px) {
+  .v-library__picks { grid-template-columns: repeat(3, 1fr); }
+  .v-library__text { font-size: 17px; }
+  .v-library__rowtitle { font-size: 16px; }
 }
