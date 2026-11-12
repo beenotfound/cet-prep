@@ -154,6 +154,8 @@ function build(ctx, root) {
     const chipHost = h('div');
     const paperHost = h('div', { class: 'stack' });
     const countEls = new Map();
+    const COLLAPSE = 6;
+    let expanded = false;
 
     function refresh() {
       const vocabCount = vocabPool(ctx).filter(levelOk).length;
@@ -164,18 +166,29 @@ function build(ctx, root) {
           ? '20 题/组'
           : `${contentPool(ctx).filter((i) => i.type === type && levelOk(i)).length} 篇`;
       }
-      const papers = ctx.data.papers.items.filter(levelOk);
-      paperHost.replaceChildren(...(papers.length
-        ? papers.map((paper) => card({
-            children: h('div', { class: 'row row--between' },
-              h('div', { class: 'grow' },
-                h('div', { class: 'bold' }, paper.title),
-                h('div', { class: 'xs muted' }, `${paper.sections.length} 个部分 · ${paper.sections.reduce((a, s) => a + s.ids.length, 0)} 题`),
-              ),
-              button({ label: '开始', size: 'sm', variant: 'primary', onClick: () => startPaper(paper) }),
-            ),
-          }))
-        : [h('div', { class: 'c-panel small' }, '这个级别还没有整卷')]));
+      const papers = ctx.data.papers.items.filter(levelOk).slice().sort((a, b) => {
+        const rank = (p) => (p.id.startsWith('bank-real4-') ? 0 : p.id.startsWith('bank-') ? 1 : 2);
+        return rank(a) - rank(b) || (a.id < b.id ? 1 : -1);
+      });
+      const shown = expanded ? papers : papers.slice(0, COLLAPSE);
+      const cards = shown.map((paper) => card({
+        className: 'v-exam__paper',
+        children: h('div', { class: 'row row--between' },
+          h('div', { class: 'grow' },
+            h('div', { class: 'bold' }, paper.title),
+            h('div', { class: 'xs muted' }, `${paper.sections.length} 个部分 · ${paper.sections.reduce((a, s) => a + s.ids.length, 0)} 题`),
+          ),
+          button({ label: '开始', size: 'sm', variant: 'primary', onClick: () => startPaper(paper) }),
+        ),
+      }));
+      if (papers.length > COLLAPSE) {
+        cards.push(button({
+          label: expanded ? '收起' : `显示全部 ${papers.length} 套`,
+          variant: 'ghost', block: true, size: 'sm',
+          onClick: () => { expanded = !expanded; refresh(); },
+        }));
+      }
+      paperHost.replaceChildren(...(cards.length ? cards : [h('div', { class: 'c-panel small' }, '这个级别还没有整卷')]));
     }
 
     function refreshChips() {
@@ -216,7 +229,7 @@ function build(ctx, root) {
         }),
       ),
       h('div', { class: 'c-divider', style: { 'margin': '6px 0' } }),
-      h('h2', { class: 'bold', style: { 'font-size': '18px' } }, '模拟整卷'),
+      h('h2', { class: 'bold', style: { 'font-size': '18px' } }, '整卷'),
       paperHost,
     );
   }

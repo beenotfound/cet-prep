@@ -341,7 +341,7 @@ export function render(ctx) {
           h('br'),
           '阅读覆盖率按站内 32 篇阅读语料的词频加权估算。',
           h('br'),
-          '题目为原创、程序生成，或来自 cypher-yht/dsh-plugins-exam-practice（MIT）与 Drhm1224/cet6-all-in-one；不含受版权保护的真题原文。',
+          '题目为原创、程序生成，或来自公开整理仓库（cypher-yht、Drhm1224、123xzw999）；部分真题文本仅供非商用学习。',
           h('br'),
           '听力模块未内置（原音频需配套真题文本，版权受限）。',
         ),
