@@ -168,7 +168,10 @@ export function render(ctx) {
           h('h1', { class: 'page-title' }, '单词库'),
           h('div', { class: 'page-sub' }, countEl),
         ),
-        button({ label: '逐词过筛', variant: 'violet', size: 'sm', onClick: startSieve }),
+        h('div', { class: 'row' },
+          button({ label: '导入词表', size: 'sm', onClick: () => { ctx.pending = ctx.pending || {}; ctx.pending.focusImport = true; ctx.go('#/me'); } }),
+          button({ label: '逐词过筛', variant: 'violet', size: 'sm', onClick: startSieve }),
+        ),
       ),
       h('input', {
         class: 'c-input', type: 'search', placeholder: '搜单词或中文释义…', value: query,

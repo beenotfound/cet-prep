@@ -8,7 +8,7 @@ import * as claude from '../features/providers/claude.js';
 import { estimateKnown } from '../domain/engine.js';
 import { coverageOf } from '../domain/coverage.js';
 import { buildCard, dataUrlToBlob, isInAppBrowser, prefersSystemShare, shareFile, saveBlob, shareApp } from '../features/share.js';
-import { parseImport } from '../domain/importer.js';
+import { parseImport, parseWordList } from '../domain/importer.js';
 import { daysUntil } from '../core/format.js';
 import { telemetryOptedOut, setTelemetryOptOut } from '../core/telemetry.js';
 
@@ -23,7 +23,11 @@ export function render(ctx) {
   const root = h('div', { class: 'v-me stack stack--lg' });
 
   function paint() {
-    root.replaceChildren(headerLite(), profileCard(), statsCard(), shareCardView(), aiCard(), importCard(), backupCard(), aboutCard(), privacyCard());
+    root.replaceChildren(headerLite(), profileCard(), statsCard(), shareCardView(), aiCard(), wordListCard(), importCard(), backupCard(), aboutCard(), privacyCard());
+    if (ctx.pending?.focusImport) {
+      delete ctx.pending.focusImport;
+      requestAnimationFrame(() => root.querySelector('.v-me__wordlist')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
   }
 
   function shareStats() {
@@ -240,6 +244,63 @@ export function render(ctx) {
     }
   }
 
+  function wordListCard() {
+    let text = '';
+    const fileInput = h('input', {
+      type: 'file', accept: '.txt,.csv,text/plain,text/csv', style: { display: 'none' },
+      onchange: async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try { text = await file.text(); ta.value = text; toast(`已读取 ${file.name}`); }
+        catch { toast('文件读取失败', 'error'); }
+      },
+    });
+    const ta = h('textarea', {
+      class: 'c-textarea', style: { 'min-height': '100px' },
+      placeholder: '每行一个词，例如：\nabandon 放弃\nabide 忍受\ncampus 校园\ndelicious 美味的',
+      oninput: (e) => { text = e.target.value; },
+    });
+    return card({
+      className: 'v-me__wordlist',
+      children: h('div', { class: 'stack' },
+        h('div', { class: 'bold' }, '导入单词表'),
+        h('p', { class: 'xs muted' },
+          '每行一个：英文单词 + 中文释义，空格/逗号/Tab 分隔都可以；也可以选 .txt / .csv 文件。'),
+        ta,
+        h('div', { class: 'row' },
+          button({ label: '导入单词表', size: 'sm', variant: 'primary', onClick: () => {
+            const { items, errors, words } = parseWordList(text, state.profile.level);
+            if (!items.length) { toast(errors[0] || '没有识别到单词', 'error'); return; }
+            const total = ctx.actions.importQuestions(items);
+            toast(`导入 ${words} 个单词（${items.length} 道题）`);
+            showSheet({
+              title: '单词表已导入',
+              body: h('div', { class: 'stack small' },
+                h('p', null, `共 ${words} 个单词、${items.length} 道自定义词汇题，已存入本机。`),
+                errors.length ? h('div', { class: 'stack' },
+                  h('p', { class: 'xs muted' }, `有 ${errors.length} 行被跳过：`),
+                  h('ul', { class: 'stack xs' }, errors.slice(0, 6).map((e) => h('li', null, e))),
+                ) : null,
+                h('p', { class: 'xs muted' }, '去「题库 → 词汇速练」练习；今日词表仍使用内置 6662 词。'),
+              ),
+              actions: [{ label: '去词汇速练', variant: 'primary', onClick: () => ctx.go('#/exam') }, { label: '知道了' }],
+            });
+            paint();
+          } }),
+          button({ label: '选择文件', size: 'sm', onClick: () => fileInput.click() }),
+          button({ label: '清空导入', size: 'sm', onClick: async () => {
+            if (!state.custom.length) { toast('还没有导入的题目'); return; }
+            const ok = await confirmSheet('清空导入', `会删除已导入的 ${state.custom.length} 道题，内置题库不受影响。`, { okLabel: '清空', tone: 'red' });
+            if (!ok) return;
+            ctx.actions.clearImported(); toast('已清空'); paint();
+          } }),
+        ),
+        fileInput,
+        h('div', { class: 'xs faint' }, `当前已导入 ${state.custom.length} 道自定义题（含单词表）`),
+      ),
+    });
+  }
+
   function importCard() {
     let text = '';
     const ta = h('textarea', {
@@ -249,9 +310,9 @@ export function render(ctx) {
     });
     return card({
       children: h('div', { class: 'stack' },
-        h('div', { class: 'bold' }, '导入题库'),
+        h('div', { class: 'bold' }, '导入题库 JSON（进阶）'),
         h('p', { class: 'xs muted' },
-          '支持词汇题与阅读 / 选词 / 匹配 / 翻译 / 写作 JSON，只存本机。'),
+          '支持词汇题与阅读 / 选词 / 匹配 / 翻译 / 写作 JSON，只存本机。普通单词表请用上方「导入单词表」。'),
         ta,
         h('div', { class: 'row' },
           button({

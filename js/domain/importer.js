@@ -87,3 +87,74 @@ export function parseImport(text) {
   });
   return { items, errors };
 }
+
+
+/**
+ * Plain word list: one word per line, e.g. "abandon 放弃" / "abandon,放弃".
+ * Produces custom vocabulary questions (spell + w2m when enough words).
+ * These go to 题库 → 词汇速练; they do not modify the built-in SRS word bank.
+ */
+export function parseWordList(text, level = 'cet6') {
+  const lines = String(text || '').split(/\r?\n/);
+  const entries = [];
+  const errors = [];
+  const seen = new Set();
+  lines.forEach((raw, index) => {
+    const line = raw.replace(/^\uFEFF/, '').trim();
+    if (!line || line.startsWith('#')) return;
+    const m = line.match(/^([A-Za-z][A-Za-z'’-]*(?:\s+[A-Za-z][A-Za-z'’-]*)?)\s*(?:[\t,，]|\s{2,}|\s+)\s*(.+)$/);
+    if (!m) {
+      errors.push(`第 ${index + 1} 行：格式应为「英文单词 中文释义」`);
+      return;
+    }
+    const word = m[1].trim();
+    const gloss = m[2].trim();
+    if (!/[\u3400-\u9fff]/.test(gloss)) {
+      errors.push(`第 ${index + 1} 行：释义请用中文，例如「${word} 中文释义」`);
+      return;
+    }
+    const key = word.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    entries.push({ word, gloss });
+  });
+  if (!entries.length) return { items: [], errors: errors.length ? errors : ['没有识别到单词，请每行写「单词 释义」'], words: 0 };
+
+  const safeLevel = level === 'cet4' ? 'cet4' : 'cet6';
+  const items = [];
+  const optionPool = entries.map((x) => x.gloss);
+  entries.forEach((entry, index) => {
+    const base = { level: safeLevel, custom: true, word: entry.word, source: 'imported' };
+    items.push({
+      ...base,
+      id: `word-spell-${index}-${entry.word.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+      type: 'spell',
+      prompt: entry.gloss,
+      hint: `${entry.word[0]}… (${entry.word.length} 个字母)`,
+      answer: entry.word,
+      explain: `${entry.word} = ${entry.gloss}`,
+    });
+    const distractors = [];
+    for (let i = 0; i < optionPool.length && distractors.length < 3; i++) {
+      const candidate = optionPool[(index + 1 + i) % optionPool.length];
+      if (candidate !== entry.gloss && !distractors.includes(candidate)) distractors.push(candidate);
+    }
+    if (distractors.length === 3) {
+      const options = [entry.gloss, ...distractors];
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+      items.push({
+        ...base,
+        id: `word-w2m-${index}-${entry.word.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+        type: 'w2m',
+        prompt: entry.word,
+        options,
+        answer: options.indexOf(entry.gloss),
+        explain: `${entry.word} = ${entry.gloss}`,
+      });
+    }
+  });
+  return { items, errors, words: entries.length };
+}
