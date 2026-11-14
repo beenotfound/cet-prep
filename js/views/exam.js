@@ -7,6 +7,7 @@ import { writingReview, scoreEssay } from '../features/writing-review.js';
 import { gradeItem, formatClock } from '../domain/exam.js';
 import { translationEstimate, scoreAttempt } from '../domain/report.js';
 import { pairListening, pairingLabel } from '../domain/pairing.js';
+import { choosePracticeItems, wrongEntriesFromItem } from '../domain/progress.js';
 import { renderReport } from './report.js';
 import { gradeTranslation, gradeWriting, reportAIError } from '../features/ai.js';
 import { track } from '../core/telemetry.js';
@@ -30,16 +31,6 @@ const PRACTICE = [
   { type: 'translation', label: '翻译', desc: '参考译文 + AI 点评', tone: 'pink' },
   { type: 'writing', label: '写作', desc: '范文 + AI 批改', tone: 'yellow' },
 ];
-
-/** Shows a loading state immediately, then fills the same root once the exam bundle arrives. */
-function shuffle(items) {
-  const copy = items.slice();
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
 
 export function render(ctx) {
   const root = h('div', { class: 'v-exam stack stack--lg' });
@@ -68,6 +59,7 @@ function build(ctx, root) {
   let session = { correct: 0, total: 0, pending: 0, byType: {} };
   let paperTitle = '';
   let currentPaper = null;
+  let currentPractice = null;
   let lastAttempt = null;
   let attemptStartedAt = 0;
   let timer = null;
@@ -111,18 +103,33 @@ function build(ctx, root) {
 
   function startPractice(type) {
     currentPaper = null;
+    currentPractice = { type, title: TYPE_LABEL[type] || type };
+    const mode = ctx.state.profile.practiceMode || 'random';
+    const seen = ctx.state.practiceSeen || {};
     let items;
     if (type === 'vocab') {
-      items = pickVocab(ctx, 20);
+      const pool = vocabPool(ctx).filter((i) => {
+        const lv = ctx.state.profile.level;
+        if (lv === 'both') return true;
+        if (lv === 'cet4') return i.level === 'cet4';
+        return i.level !== 'cet4';
+      });
+      items = choosePracticeItems(pool, mode, seen, 20);
     } else {
       const pool = contentPool(ctx).filter((i) => i.type === type && matchesLevel(i));
-      items = shuffle(pool).slice(0, type === 'translation' ? 3 : type === 'writing' ? 3 : 5);
+      items = choosePracticeItems(pool, mode, seen, type === 'translation' || type === 'writing' ? 3 : 5);
+    }
+    if (!items.length) {
+      currentPractice = null;
+      ctx.toast(mode === 'wrong' ? '这个题型还没有错题，先做几组吧' : '这个题型暂时没有可练习的题');
+      return;
     }
     begin(items.map((item) => ({ item })), TYPE_LABEL[type] || type);
   }
 
   function startPaper(paper) {
     currentPaper = paper;
+    currentPractice = null;
     const items = [];
     paper.sections.forEach((section, si) => {
       section.ids.forEach((id, ii) => {
@@ -136,24 +143,6 @@ function build(ctx, root) {
   function matchesLevel(item) {
     const lv = ctx.state.profile.level;
     return lv === 'both' || lv === 'cet6' ? item.level !== 'cet4' : item.level === 'cet4';
-  }
-
-  function pickVocab(ctx, n) {
-    const pool = vocabPool(ctx).filter((i) => {
-      const lv = ctx.state.profile.level;
-      if (lv === 'both') return true;
-      if (lv === 'cet4') return i.level === 'cet4';
-      return i.level !== 'cet4';
-    });
-    const out = [];
-    const used = new Set();
-    while (out.length < n && out.length < pool.length) {
-      const i = Math.floor(Math.random() * pool.length);
-      if (used.has(i)) continue;
-      used.add(i);
-      out.push(pool[i]);
-    }
-    return out;
   }
 
   /* ---------------- home ---------------- */
@@ -184,16 +173,29 @@ function build(ctx, root) {
         return rank(a) - rank(b) || (a.id < b.id ? 1 : -1);
       });
       const shown = expanded ? papers : papers.slice(0, COLLAPSE);
-      const cards = shown.map((paper) => card({
-        className: 'v-exam__paper',
-        children: h('div', { class: 'row row--between' },
-          h('div', { class: 'grow' },
-            h('div', { class: 'bold' }, paper.title),
-            h('div', { class: 'xs muted' }, `${paper.sections.length} 个部分 · ${paper.sections.reduce((a, s) => a + s.ids.length, 0)} 题`),
+      const cards = shown.map((paper) => {
+        const attempts = (ctx.state.examAttempts || []).filter((a) => a.paperId === paper.id);
+        const last = attempts.slice().sort((a, b) => (b.finishedAt || 0) - (a.finishedAt || 0))[0];
+        const r = last ? scoreAttempt(last) : null;
+        return card({
+          className: 'v-exam__paper',
+          children: h('div', { class: 'stack' },
+            h('div', { class: 'row row--between' },
+              h('div', { class: 'grow' },
+                h('div', { class: 'bold' }, paper.title),
+                h('div', { class: 'xs muted' }, `${paper.sections.length} 个部分 · ${paper.sections.reduce((a, s) => a + s.ids.length, 0)} 题`),
+              ),
+              last
+                ? tag(`上次 ${r ? Math.round(r.total) : '—'} 分`, r?.complete ? 'mint' : 'yellow')
+                : tag('未做', 'blue'),
+            ),
+            h('div', { class: 'row', style: { 'margin-top': '6px' } },
+              button({ label: last ? '重做' : '开始', size: 'sm', variant: 'primary', onClick: () => startPaper(paper) }),
+              last ? button({ label: '看上次报告', size: 'sm', onClick: () => ctx.go(`#/report/${last.id}`) }) : null,
+            ),
           ),
-          button({ label: '开始', size: 'sm', variant: 'primary', onClick: () => startPaper(paper) }),
-        ),
-      }));
+        });
+      });
       if (papers.length > COLLAPSE) {
         cards.push(button({
           label: expanded ? '收起' : `显示全部 ${papers.length} 套`,
@@ -221,10 +223,17 @@ function build(ctx, root) {
 
     return h('div', { class: 'stack stack--lg' },
       h('header', { class: 'page-head' },
-        h('div', null, h('h1', { class: 'page-title' }, '题库'), subEl),
+        h('div', null, h('h1', { class: 'page-title' }, '题库')),
       ),
       chipHost,
-      h('h2', { class: 'bold', style: { 'font-size': '18px' } }, '专项练习'),
+      h('div', { class: 'row row--between' },
+        h('h2', { class: 'bold', style: { 'font-size': '18px' } }, '专项练习'),
+        chips(
+          [{ id: 'random', label: '随机' }, { id: 'unseen', label: '优先未做' }, { id: 'wrong', label: '只练错题' }],
+          ctx.state.profile.practiceMode || 'random',
+          (id) => { ctx.actions.setPracticeMode(id); paint(); },
+        ),
+      ),
       h('div', { class: 'v-exam__grid' },
         PRACTICE.map((p) => {
           const countEl = h('div', { class: 'xs bold' });
@@ -248,8 +257,12 @@ function build(ctx, root) {
       ),
       paperHost,
       h('div', { class: 'c-divider', style: { 'margin': '6px 0' } }),
-      h('h2', { class: 'bold', style: { 'font-size': '18px' } }, '最近模考'),
+      h('div', { class: 'row row--between' },
+        h('h2', { class: 'bold', style: { 'font-size': '18px' } }, '最近模考'),
+        button({ label: '全部记录 / 错题本', size: 'sm', onClick: () => ctx.go('#/records') }),
+      ),
       recentAttempts(),
+      h('div', { class: 'xs muted', style: { 'margin-top': '12px' } }, subEl),
     );
   }
 
@@ -482,6 +495,48 @@ function build(ctx, root) {
     paint();
   }
 
+  function buildPracticeAttempt() {
+    const items = queue.map((entry) => {
+      const response = entry.response ?? null;
+      const isText = entry.item.type === 'writing' || entry.item.type === 'translation';
+      return {
+        itemId: entry.item.id,
+        type: entry.item.type,
+        correct: Number(entry.correct) || 0,
+        total: Number(entry.total) || 0,
+        detail: entry.detail || [],
+        response: isText ? String(response || '').slice(0, 4000) : response,
+        elapsedMs: Number(entry.elapsedMs) || 0,
+      };
+    });
+    return {
+      id: `prac-${Date.now()}`,
+      type: currentPractice?.type || 'vocab',
+      title: currentPractice?.title || '练习',
+      startedAt: attemptStartedAt || Date.now(),
+      finishedAt: Date.now(),
+      items,
+    };
+  }
+
+  function collectWrong() {
+    const list = [];
+    for (const entry of queue) {
+      if (!entry?.item) continue;
+      list.push(...wrongEntriesFromItem(entry.item, entry));
+    }
+    return list;
+  }
+
+  function collectCorrectKeys() {
+    const keys = [];
+    for (const entry of queue) {
+      if (!entry?.item || !Array.isArray(entry.detail)) continue;
+      entry.detail.forEach((d, i) => { if (d.ok) keys.push(`${entry.item.id}:${i}`); });
+    }
+    return keys;
+  }
+
   function buildAttempt() {
     const items = queue.map((entry) => {
       const response = entry.response ?? null;
@@ -543,11 +598,24 @@ function build(ctx, root) {
       try {
         lastAttempt = buildAttempt();
         ctx.actions.saveExamAttempt(lastAttempt);
+        ctx.actions.recordPracticeSeen(lastAttempt.items, 'paper');
+        ctx.actions.addWrongItems(collectWrong());
+        ctx.actions.removeWrongKeys(collectCorrectKeys());
         if (ctx.pending?.mock) delete ctx.pending.mock;
         track('exam_report', { paperId: currentPaper.id, total: session.total, correct: session.correct });
       } catch (error) {
         console.warn('save attempt failed', error);
         ctx.toast('报告已生成，但本地保存失败');
+      }
+    } else if (currentPractice) {
+      try {
+        const attempt = buildPracticeAttempt();
+        ctx.actions.savePracticeAttempt(attempt);
+        ctx.actions.recordPracticeSeen(attempt.items, 'practice');
+        ctx.actions.addWrongItems(collectWrong());
+        ctx.actions.removeWrongKeys(collectCorrectKeys());
+      } catch (error) {
+        console.warn('save practice failed', error);
       }
     }
     mode = 'result';
@@ -603,6 +671,18 @@ function build(ctx, root) {
   }
 
   // one-shot hand-off from report / mock flow
+  if (ctx.pending?.wrongItems) {
+    const ids = [...new Set(ctx.pending.wrongItems)];
+    delete ctx.pending.wrongItems;
+    const entries = ids.map((id) => ctx.data.contentById?.get(id)).filter(Boolean).map((item) => ({ item }));
+    if (entries.length) {
+      currentPaper = null;
+      currentPractice = { type: 'wrong', title: '错题重练' };
+      begin(entries, '错题重练');
+      return root;
+    }
+    ctx.toast('错题数据不完整，先重新做一组吧');
+  }
   if (ctx.pending?.mock?.listening) {
     const id = ctx.pending.mock.paperId;
     const paper = ctx.data.papers?.items?.find((p) => p.id === id);

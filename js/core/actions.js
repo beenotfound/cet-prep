@@ -145,6 +145,75 @@ export function createActions({ store, data }) {
       return attempt;
     },
 
+    /** Persist a practice attempt (last 30), plus per-item seen/wrong counters. */
+    savePracticeAttempt(attempt) {
+      const s = state();
+      const list = Array.isArray(s.practiceAttempts) ? s.practiceAttempts : [];
+      list.push(attempt);
+      s.practiceAttempts = list.slice(-30);
+      commit();
+      return attempt;
+    },
+
+    recordPracticeSeen(items) {
+      const s = state();
+      if (!s.practiceSeen || typeof s.practiceSeen !== 'object') s.practiceSeen = {};
+      const now = Date.now();
+      for (const entry of items || []) {
+        if (!entry?.itemId) continue;
+        const prev = s.practiceSeen[entry.itemId] || { count: 0, wrong: 0, lastAt: 0 };
+        const subjective = entry.type === 'writing' || entry.type === 'translation';
+        const wrong = !subjective && Number(entry.correct) < Number(entry.total) ? 1 : 0;
+        s.practiceSeen[entry.itemId] = {
+          count: (prev.count || 0) + 1,
+          // latest answer wins: a later correct attempt clears "wrong" for practice selection
+          wrong: wrong ? (prev.wrong || 0) + 1 : 0,
+          lastAt: now,
+        };
+      }
+      commit();
+    },
+
+    addWrongItems(entries) {
+      const s = state();
+      if (!Array.isArray(s.wrongBook)) s.wrongBook = [];
+      const now = Date.now();
+      for (const entry of entries || []) {
+        if (!entry?.itemId) continue;
+        const key = `${entry.itemId}:${entry.qIndex ?? 0}`;
+        const existing = s.wrongBook.find((x) => x.key === key);
+        if (existing) {
+          existing.count = (existing.count || 1) + 1;
+          existing.lastAt = now;
+          existing.mine = entry.mine;
+          existing.explain = entry.explain || existing.explain;
+        } else {
+          s.wrongBook.push({ ...entry, key, count: 1, lastAt: now });
+        }
+      }
+      s.wrongBook = s.wrongBook.slice(-300);
+      commit();
+      return s.wrongBook.length;
+    },
+
+    removeWrongKeys(keys) {
+      const set = new Set(keys || []);
+      if (!set.size) return;
+      state().wrongBook = (state().wrongBook || []).filter((x) => !set.has(x.key));
+      commit();
+    },
+
+    removeWrongItem(key) {
+      const s = state();
+      s.wrongBook = (s.wrongBook || []).filter((x) => x.key !== key);
+      commit();
+    },
+
+    setPracticeMode(mode) {
+      state().profile.practiceMode = mode;
+      commit();
+    },
+
     /** Persist the latest listening attempt per set (used by mock pairing). */
     saveListeningAttempt(setId, attempt) {
       const s = state();

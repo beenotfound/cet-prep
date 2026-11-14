@@ -441,3 +441,12 @@
 .v-report__history + .v-report__history { border-top: 1px dashed rgba(0,0,0,.12); }
 .v-report__history.is-current { font-weight: 800; }
 .v-exam__paper { text-align: left; width: 100%; cursor: pointer; }
+
+
+/* ---------------- records / wrong book ---------------- */
+.v-records__row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 10px 12px; background: var(--paper, #fff); border: 1px solid rgba(0,0,0,.12); border-radius: 12px; color: inherit; cursor: pointer; }
+.v-records__row.is-static { cursor: default; }
+.v-records__row + .v-records__row { margin-top: 6px; }
+.v-records__score { text-align: right; min-width: 54px; }
+.v-wrong { padding: 10px 12px; border: 1px solid rgba(0,0,0,.12); border-radius: 12px; background: var(--paper, #fff); }
+.v-wrong + .v-wrong { margin-top: 6px; }

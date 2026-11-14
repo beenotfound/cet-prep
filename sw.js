@@ -1,5 +1,5 @@
 /* sw.js — offline shell for supersuper四六级. Bump VERSION on every deploy. */
-const VERSION = 'cet-collage-d9ea0a8415';
+const VERSION = 'cet-collage-771a2cb32b';
 const CACHE = VERSION;
 
 const SHELL = [
@@ -32,6 +32,8 @@ const SHELL = [
   './js/views/library.js',
   './js/views/listening.js',
   './js/views/report.js',
+  './js/views/records.js',
+  './js/domain/progress.js',
   './js/domain/report.js',
   './js/domain/pairing.js',
   './js/views/me.js',

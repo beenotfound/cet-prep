@@ -239,6 +239,7 @@ export function renderReport(ctx, attempt) {
     historyCard(ctx, attempt),
     h('div', { class: 'stack' },
       button({ label: '再做一次', variant: 'primary', block: true, onClick: () => { ctx.pending = ctx.pending || {}; ctx.pending.paperId = attempt.paperId; ctx.go('#/exam'); } }),
+      button({ label: '错题本 / 学习记录', block: true, onClick: () => ctx.go('#/records') }),
       button({ label: '回题库', block: true, onClick: () => ctx.go('#/exam') }),
     ),
   );

@@ -32,7 +32,7 @@ export function defaultExamDate(now = new Date()) {
 export function defaults() {
   return {
     v: SCHEMA_VERSION,
-    profile: { level: 'cet6', examDate: defaultExamDate(), dailyNew: 20, onboarded: false },
+    profile: { level: 'cet6', examDate: defaultExamDate(), dailyNew: 20, onboarded: false, practiceMode: 'random' },
     theta: 5.2,
     calib: { at: null, se: null, items: 0, spot: null },
     words: {},
@@ -42,6 +42,9 @@ export function defaults() {
     read: [],
     papers: {},
     examAttempts: [],
+    practiceAttempts: [],
+    practiceSeen: {},
+    wrongBook: [],
     listeningAttempts: {},
     custom: [],
     ai: { provider: 'deepseek', baseUrl: '', key: '', model: '', sessionTokens: 0, budget: 0, remember: false },
