@@ -85,6 +85,7 @@ function build(ctx, root) {
   }
 
   function begin(entries, title) {
+    track('exam_start', { title, total: entries.length });
     if (!entries.length) { ctx.toast('这里还没有内容'); return false; }
     queue = entries;
     idx = 0;
@@ -348,6 +349,7 @@ function build(ctx, root) {
   }
 
   function finish() {
+    track('exam_finish', { correct: session.correct, total: session.total, pending: session.pending });
     stopTimer();
     mode = 'result';
     paint();

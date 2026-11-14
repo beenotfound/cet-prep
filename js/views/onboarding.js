@@ -3,6 +3,7 @@
 import { h } from '../core/dom.js';
 import { button, card, progress, chips, tag } from '../ui/components.js';
 import { Calibrator, pKnow, zoneOf, spotCheck, applySpotCheck, eligibleWords, estimateKnown } from '../domain/engine.js';
+import { track } from '../core/telemetry.js';
 
 const LEVELS = [
   { id: 'cet4', label: '四级' },
@@ -78,6 +79,7 @@ export function render(ctx) {
   }
 
   function startQuiz() {
+    track('calibration_start');
     cal = new Calibrator(eligible(), state.profile.level, { theta: 5.2 });
     step = 'quiz';
     next();
@@ -136,6 +138,7 @@ export function render(ctx) {
   /* ---------------- finish / result ---------------- */
 
   function finishQuiz() {
+    track('calibration_complete');
     const result = cal ? cal.result() : { theta: state.theta, se: null, items: 0, zones: null };
     ctx.actions.finishCalibration({ theta: result.theta, se: result.se, items: result.items, spot: null });
     step = 'result';
@@ -144,6 +147,7 @@ export function render(ctx) {
   }
 
   function startSpot() {
+    track('recheck_start');
     const pool = eligible();
     const sample = spotCheck(pool, state.theta, 5);
     const picks = [
@@ -178,6 +182,7 @@ export function render(ctx) {
   }
 
   function finishSpot() {
+    track('recheck_complete', { knownHits: hits.known, knownN: hits.knownN, unknownHits: hits.unknown, unknownN: hits.unknownN });
     const nextTheta = applySpotCheck(state.theta, hits.known, hits.knownN, hits.unknown, hits.unknownN);
     ctx.actions.finishCalibration({
       theta: nextTheta,

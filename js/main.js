@@ -4,6 +4,7 @@ import { loadJSON } from './core/api.js';
 import { createStore } from './core/store.js';
 import { createActions } from './core/actions.js';
 import { createRouter } from './core/router.js';
+import { track, trackOncePerSession } from './core/telemetry.js';
 import { statePanel, toast } from './ui/components.js';
 import * as today from './views/today.js';
 import * as words from './views/words.js';
@@ -20,6 +21,7 @@ const TAB_OF = { today: 'today', words: 'words', word: 'words', listening: 'list
 function syncNav() {
   const first = (location.hash || '#/today').replace(/^#\/?/, '').split('/')[0] || 'today';
   const tab = TAB_OF[first] || 'today';
+  track('page_view', { route: first });
   for (const button of document.querySelectorAll('.c-nav__item')) {
     button.classList.toggle('is-active', button.dataset.tab === tab);
   }
@@ -154,6 +156,7 @@ async function boot() {
 
   window.addEventListener('hashchange', syncNav);
   syncNav();
+  trackOncePerSession('app_open');
   router.start();
 
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {

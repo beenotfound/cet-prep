@@ -44,6 +44,7 @@ export function createStudySession(ctx, { queue, onDone, title = '学习' }) {
   const words = queue.slice();
   const root = h('div', { class: 'v-study stack stack--lg' });
   const session = { done: 0, again: 0, index: 0, revealed: false };
+  track('study_start', { count: words.length, title });
   let current = null;
   let finished = false;
 
@@ -178,6 +179,7 @@ export function createStudySession(ctx, { queue, onDone, title = '学习' }) {
 
   function grade(g) {
     if (!current) return;
+    track('study_answer', { rating: g, index: session.index + 1, total: words.length });
     ctx.actions.gradeWord(current, g);
     if (g === 0) session.again++;
     session.done++;
@@ -187,6 +189,7 @@ export function createStudySession(ctx, { queue, onDone, title = '学习' }) {
   }
 
   function finish() {
+    track('study_finish', { done: session.done, again: session.again, total: words.length });
     cleanup();
     root.replaceChildren(
       h('div', { class: 'stack stack--lg' },

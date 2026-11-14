@@ -2,6 +2,7 @@
 
 import { h } from '../core/dom.js';
 import { button, card, tag, statePanel, toast } from '../ui/components.js';
+import { track } from '../core/telemetry.js';
 
 const LEVEL_LABEL = { 4: '四级', 6: '六级' };
 const levelTone = (level) => (level === 6 ? 'violet' : 'blue');
@@ -120,7 +121,7 @@ function build(ctx, root, params) {
           button({
             label: '开始练习',
             variant: 'primary',
-            onClick: () => { currentSet = set; reset(); paint(); },
+            onClick: () => { currentSet = set; reset(); track('listening_start', { setId: set.id, level: set.level, questions: countQuestions(set) }); paint(); },
           }),
         ),
       ),
@@ -172,6 +173,7 @@ function build(ctx, root, params) {
           if (pending > 0) return;
           if (isLast) {
             submitted = true;
+            track('listening_submit', { setId: set.id, level: set.level, total, answered });
             paint();
             toast('已交卷，成绩见下方', '');
           } else {

@@ -10,6 +10,7 @@ import { coverageOf } from '../domain/coverage.js';
 import { buildCard, dataUrlToBlob, isInAppBrowser, prefersSystemShare, shareFile, saveBlob, shareApp } from '../features/share.js';
 import { parseImport } from '../domain/importer.js';
 import { daysUntil } from '../core/format.js';
+import { telemetryOptedOut, setTelemetryOptOut } from '../core/telemetry.js';
 
 const LEVELS = [
   { id: 'cet4', label: '四级' },
@@ -22,7 +23,7 @@ export function render(ctx) {
   const root = h('div', { class: 'v-me stack stack--lg' });
 
   function paint() {
-    root.replaceChildren(headerLite(), profileCard(), statsCard(), shareCardView(), aiCard(), importCard(), backupCard(), aboutCard());
+    root.replaceChildren(headerLite(), profileCard(), statsCard(), privacyCard(), shareCardView(), aiCard(), importCard(), backupCard(), aboutCard());
   }
 
   function shareStats() {
@@ -139,6 +140,21 @@ export function render(ctx) {
           button({ label: '重新校准', size: 'sm', onClick: () => ctx.go('#/onboarding') }),
           button({ label: '词库', size: 'sm', onClick: () => ctx.go('#/words') }),
         ),
+      ),
+    });
+  }
+
+  function privacyCard() {
+    const off = telemetryOptedOut();
+    return card({
+      children: h('div', { class: 'stack' },
+        h('div', { class: 'bold' }, '匿名统计'),
+        h('p', { class: 'xs muted' }, '只记录页面浏览、功能使用次数和完成情况，不含单词内容、答题内容或个人信息；用于改进产品。'),
+        button({
+          label: off ? '已关闭 · 重新开启' : '关闭匿名统计',
+          size: 'sm',
+          onClick: () => { setTelemetryOptOut(!off); paint(); toast(off ? '已重新开启匿名统计' : '已关闭匿名统计'); },
+        }),
       ),
     });
   }
