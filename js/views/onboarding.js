@@ -144,8 +144,23 @@ export function render(ctx) {
   }
 
   function startSpot() {
-    const sample = spotCheck(eligible(), state.theta, 5);
-    spot = [...sample.known.map((w) => ({ w, expect: 'known' })), ...sample.unknown.map((w) => ({ w, expect: 'unknown' }))];
+    const pool = eligible();
+    const sample = spotCheck(pool, state.theta, 5);
+    const picks = [
+      ...sample.known.map((w) => ({ w, expect: 'known' })),
+      ...sample.unknown.map((w) => ({ w, expect: 'unknown' })),
+    ];
+    // A lopsided word list (e.g. everything is still "unknown") would otherwise
+    // yield only 5 questions even though the button promises 10.
+    if (picks.length < 10) {
+      const used = new Set(picks.map((x) => x.w));
+      const rest = pool.filter((w) => !used.has(w));
+      while (picks.length < 10 && rest.length) {
+        const w = rest.splice(Math.floor(Math.random() * rest.length), 1)[0];
+        picks.push({ w, expect: pKnow(w.d, state.theta) >= 0.5 ? 'known' : 'unknown' });
+      }
+    }
+    spot = picks;
     spotIndex = 0;
     hits = { known: 0, knownN: 0, unknown: 0, unknownN: 0 };
     step = 'spot';

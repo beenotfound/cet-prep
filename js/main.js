@@ -7,6 +7,7 @@ import { createRouter } from './core/router.js';
 import { statePanel, toast } from './ui/components.js';
 import * as today from './views/today.js';
 import * as words from './views/words.js';
+import * as listening from './views/listening.js';
 import * as exam from './views/exam.js';
 import * as library from './views/library.js';
 import * as me from './views/me.js';
@@ -14,7 +15,7 @@ import * as onboarding from './views/onboarding.js';
 
 const mount = document.getElementById('app');
 
-const TAB_OF = { today: 'today', words: 'words', word: 'words', exam: 'exam', library: 'library', me: 'me', onboarding: 'today' };
+const TAB_OF = { today: 'today', words: 'words', word: 'words', listening: 'listening', exam: 'exam', library: 'library', me: 'me', onboarding: 'today' };
 
 function syncNav() {
   const first = (location.hash || '#/today').replace(/^#\/?/, '').split('/')[0] || 'today';
@@ -55,6 +56,8 @@ async function boot() {
       details: new Map(),
       detailsReady: false,
       questionsVocab: { items: [] },
+      listening: { sets: [] },
+      listeningReady: false,
       content: [],
       contentById: new Map(),
       papers: { items: [] },
@@ -68,6 +71,7 @@ async function boot() {
   let detailsPromise = null;
   let examPromise = null;
   let storiesPromise = null;
+  let listeningPromise = null;
 
   const ctx = {
     data,
@@ -109,6 +113,17 @@ async function boot() {
         .catch((error) => { storiesPromise = null; throw error; });
       return storiesPromise;
     },
+    ensureListeningData() {
+      if (data.listeningReady) return Promise.resolve();
+      if (listeningPromise) return listeningPromise;
+      listeningPromise = loadJSON('./data/listening.json', { gzip: false })
+        .then((payload) => {
+          data.listening = payload;
+          data.listeningReady = true;
+        })
+        .catch((error) => { listeningPromise = null; throw error; });
+      return listeningPromise;
+    },
   };
 
   const store = createStore({ onError: (message) => toast(message, 'error') });
@@ -119,11 +134,13 @@ async function boot() {
   const routes = {
     today,
     words,
+    listening,
     exam,
     library,
     me,
     onboarding,
     'word/:w': { render: (c, params) => words.renderWord(c, params) },
+    'listening/:setId': { render: (c, params) => listening.render(c, params) },
   };
 
   const router = createRouter({ routes, mount, fallback: today, context: ctx });

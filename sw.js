@@ -1,5 +1,5 @@
 /* sw.js — offline shell for supersuper四六级. Bump VERSION on every deploy. */
-const VERSION = 'cet-collage-6ed722bf79';
+const VERSION = 'cet-collage-54af73f374';
 const CACHE = VERSION;
 
 const SHELL = [
@@ -29,6 +29,7 @@ const SHELL = [
   './js/views/exam.js',
   './js/views/exam-items.js',
   './js/views/library.js',
+  './js/views/listening.js',
   './js/views/me.js',
   './js/views/onboarding.js',
   './js/features/ai.js',
@@ -42,6 +43,7 @@ const SHELL = [
   './data/questions-vocab.json.gz',
   './data/content.json.gz',
   './data/papers.json.gz',
+  './data/listening.json',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -70,6 +72,7 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;   // never touch AI calls
+  if (url.pathname.includes('/audio/')) return;      // big media: let the browser stream + range-request
 
   if (req.mode === 'navigate') {
     event.respondWith(
