@@ -109,16 +109,24 @@ function renderAI(host, raw, level) {
  * writingReview(ctx, item, response) — local score card + opt-in AI button.
  * Every AI call goes through requestAI's consent sheet; nothing is sent on render.
  */
-export function writingReview(ctx, item, response) {
-  const text = String(response || '').trim();
-  if (!text) return null;
+/** Local 15-point essay score, reusable by the mock report. */
+export function scoreEssay(ctx, item, text) {
+  const raw = String(text || '').trim();
+  if (!raw) return null;
   const level = item.level || ctx.state.profile.level || 'cet6';
-  const score = scoreWriting(text, {
+  return scoreWriting(raw, {
     byWord: ctx.data.byWord,
     baseline: baselineFor(ctx),
     reference: item.reference,
     level,
   });
+}
+
+export function writingReview(ctx, item, response) {
+  const text = String(response || '').trim();
+  if (!text) return null;
+  const level = item.level || ctx.state.profile.level || 'cet6';
+  const score = scoreEssay(ctx, item, text);
   const m = score.metrics;
   const aiHost = h('div');
   const configured = isConfigured(ctx.state.ai);

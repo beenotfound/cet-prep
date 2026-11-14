@@ -13,10 +13,11 @@ import * as exam from './views/exam.js';
 import * as library from './views/library.js';
 import * as me from './views/me.js';
 import * as onboarding from './views/onboarding.js';
+import * as report from './views/report.js';
 
 const mount = document.getElementById('app');
 
-const TAB_OF = { today: 'today', words: 'words', word: 'words', listening: 'listening', exam: 'exam', library: 'library', me: 'me', onboarding: 'today' };
+const TAB_OF = { today: 'today', words: 'words', word: 'words', listening: 'listening', exam: 'exam', report: 'exam', library: 'library', me: 'me', onboarding: 'today' };
 
 function syncNav() {
   const first = (location.hash || '#/today').replace(/^#\/?/, '').split('/')[0] || 'today';
@@ -141,6 +142,8 @@ async function boot() {
     library,
     me,
     onboarding,
+    report,
+    'report/:id': { render: (c, params) => report.render(c, params) },
     'word/:w': { render: (c, params) => words.renderWord(c, params) },
     'listening/:setId': { render: (c, params) => listening.render(c, params) },
   };

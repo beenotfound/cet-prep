@@ -133,6 +133,35 @@ function build(ctx, root, params) {
     return section.audio ? [section.audio] : [];
   }
 
+  function buildAttempt(set) {
+    const qs = allQuestions(set);
+    let autoRight = 0;
+    let unknown = 0;
+    for (const q of qs) {
+      if (q.answer) {
+        if (answers[q.id] === q.answer) autoRight += 1;
+      } else {
+        unknown += 1;
+      }
+    }
+    const manualRight = qs.filter((q) => !q.answer && selfMarks[q.id] === true).length;
+    return {
+      setId: set.id,
+      title: set.title,
+      level: set.level,
+      year: set.year,
+      month: set.month,
+      correct: autoRight + manualRight,
+      total: qs.length,
+      answered: Object.keys(answers).length,
+      auto: autoRight,
+      selfAssessed: unknown,
+      selfMarked: Object.keys(selfMarks).length,
+      selfMarks: { ...selfMarks },
+      finishedAt: Date.now(),
+    };
+  }
+
   function setView(set) {
     const sections = set.sections || [];
     const total = countQuestions(set);
@@ -143,6 +172,9 @@ function build(ctx, root, params) {
       h('strong', { style: S.topTitle }, set.title),
       tag(LEVEL_LABEL[set.level] || '', levelTone(set.level)),
       h('span', { style: S.progress }, `已答 ${answered} / ${total}`),
+      submitted && ctx.pending?.mock?.listening
+        ? button({ label: '进入笔试 →', variant: 'primary', onClick: () => ctx.go('#/exam?mock=1') })
+        : null,
     );
 
     if (submitted) return h('div', { class: 'stack stack--lg' }, top, resultView(set));
@@ -173,6 +205,9 @@ function build(ctx, root, params) {
           if (pending > 0) return;
           if (isLast) {
             submitted = true;
+            const attempt = buildAttempt(set);
+            ctx.actions.saveListeningAttempt(set.id, attempt);
+            if (ctx.pending?.mock && ctx.pending.mock.setId === set.id) ctx.pending.mock.listening = attempt;
             track('listening_submit', { setId: set.id, level: set.level, total, answered });
             paint();
             toast('已交卷，成绩见下方', '');

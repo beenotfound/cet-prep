@@ -135,6 +135,29 @@ export function createActions({ store, data }) {
       commit();
     },
 
+    /** Persist a full mock-report attempt; keeps the newest 20. */
+    saveExamAttempt(attempt) {
+      const s = state();
+      const list = Array.isArray(s.examAttempts) ? s.examAttempts : [];
+      list.push(attempt);
+      s.examAttempts = list.slice(-20);
+      commit();
+      return attempt;
+    },
+
+    /** Persist the latest listening attempt per set (used by mock pairing). */
+    saveListeningAttempt(setId, attempt) {
+      const s = state();
+      if (!s.listeningAttempts || typeof s.listeningAttempts !== 'object') s.listeningAttempts = {};
+      s.listeningAttempts[setId] = attempt;
+      const keys = Object.keys(s.listeningAttempts);
+      if (keys.length > 30) {
+        for (const key of keys.slice(0, keys.length - 30)) delete s.listeningAttempts[key];
+      }
+      commit();
+      return attempt;
+    },
+
     /** Replace-by-id append of imported questions. */
     importQuestions(items) {
       const s = state();

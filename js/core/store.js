@@ -41,6 +41,8 @@ export function defaults() {
     fav: [],
     read: [],
     papers: {},
+    examAttempts: [],
+    listeningAttempts: {},
     custom: [],
     ai: { provider: 'deepseek', baseUrl: '', key: '', model: '', sessionTokens: 0, budget: 0, remember: false },
     ui: { tab: 'today' },
