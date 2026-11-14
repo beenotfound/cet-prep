@@ -23,7 +23,7 @@ export function render(ctx) {
   const root = h('div', { class: 'v-me stack stack--lg' });
 
   function paint() {
-    root.replaceChildren(headerLite(), profileCard(), statsCard(), privacyCard(), shareCardView(), aiCard(), importCard(), backupCard(), aboutCard());
+    root.replaceChildren(headerLite(), profileCard(), statsCard(), shareCardView(), aiCard(), importCard(), backupCard(), aboutCard(), privacyCard());
   }
 
   function shareStats() {

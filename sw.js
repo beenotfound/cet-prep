@@ -1,5 +1,5 @@
 /* sw.js — offline shell for supersuper四六级. Bump VERSION on every deploy. */
-const VERSION = 'cet-collage-771a2cb32b';
+const VERSION = 'cet-collage-fdd85e53f6';
 const CACHE = VERSION;
 
 const SHELL = [

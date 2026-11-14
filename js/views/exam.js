@@ -223,7 +223,7 @@ function build(ctx, root) {
 
     return h('div', { class: 'stack stack--lg' },
       h('header', { class: 'page-head' },
-        h('div', null, h('h1', { class: 'page-title' }, '题库')),
+        h('div', null, h('h1', { class: 'page-title' }, '题库'), subEl),
       ),
       chipHost,
       h('div', { class: 'row row--between' },
@@ -262,7 +262,6 @@ function build(ctx, root) {
         button({ label: '全部记录 / 错题本', size: 'sm', onClick: () => ctx.go('#/records') }),
       ),
       recentAttempts(),
-      h('div', { class: 'xs muted', style: { 'margin-top': '12px' } }, subEl),
     );
   }
 
