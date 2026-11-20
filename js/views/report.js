@@ -62,14 +62,14 @@ function wrongItems(ctx, attempt) {
         const q = item.questions?.[i];
         prompt = q?.q || '';
         correct = q?.answer;
-        explain = explain || q?.explain || '';
+        explain = q?.explain || explain;
         if (typeof correct === 'number') correct = String.fromCharCode(65 + correct);
         if (typeof mine === 'number') mine = String.fromCharCode(65 + mine);
       } else if (item?.type === 'cloze') {
         const b = item.blanks?.[i];
         prompt = `第 ${i + 1} 空`;
         correct = b?.answer || '';
-        explain = explain || b?.explain || '';
+        explain = b?.explain || explain;
       } else if (item?.type === 'matching') {
         const s = item.statements?.[i];
         prompt = s?.text || '';

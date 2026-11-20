@@ -212,6 +212,11 @@
   padding: 8px 0;
   border-top: 1px dashed rgba(30, 30, 30, 0.14);
 }
+.v-exam__explain .small,
+.v-exam__explain .small.muted {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 
 /* passage + questions side by side on wide screens */
 .v-exam__split { display: flex; flex-direction: column; gap: var(--s4); }

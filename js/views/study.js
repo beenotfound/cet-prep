@@ -4,6 +4,7 @@ import { h } from '../core/dom.js';
 import { button, card, progress, tag, toast, showSheet } from '../ui/components.js';
 import { explainWord, reportAIError } from '../features/ai.js';
 import { pKnow, ZONES } from '../domain/engine.js';
+import { track } from '../core/telemetry.js';
 
 export function speak(text) {
   if (!('speechSynthesis' in window)) return;
